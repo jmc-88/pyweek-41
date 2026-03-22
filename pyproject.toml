@@ -1,0 +1,11 @@
+[project]
+name = "pyweek-41"
+version = "0.1.0"
+description = "PyWeek 41 entry from the Large Sandwich Models team."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "numpy>=2.4.3",
+    "pygame-ce>=2.5.7",
+    "pyopengl>=3.1.10",
+]
