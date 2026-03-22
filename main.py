@@ -28,7 +28,7 @@ def main():
   GL.glPrimitiveRestartIndex(primitive_restart_index)
   GL.glEnable(GL.GL_PRIMITIVE_RESTART)
 
-  t_w = t_h = 16
+  t_w = t_h = 32
   index_buffer = [0, t_w]
   for x in range(t_w - 1):
     index_buffer.append(x + 1)
@@ -48,7 +48,7 @@ def main():
   x, y = numpy.meshgrid(
     numpy.linspace(-1, 1, t_w, dtype=numpy.float32),
     numpy.linspace(-1, 1, t_h, dtype=numpy.float32))
-  z = -numpy.ones_like(x, dtype=numpy.float32)
+  z = numpy.sin(x * 8 + y * 5) * 0.05 - 0.0
   positions = numpy.stack((x, y, z), -1)
   positions_vbo = GL.glGenBuffers(1)
   GL.glBindBuffer(GL.GL_ARRAY_BUFFER, positions_vbo)
