@@ -7,6 +7,7 @@ import sys
 import time
 
 import animated_mesh
+import config
 import shaders as shaders_module
 
 
@@ -14,12 +15,6 @@ ScreenWidth = 1440
 ScreenHeight = 810
 
 PrimitiveRestartIndex = 2000000000  # Arbitrary number higher than any vertex index we plan to use.
-
-
-TerrainResolutionX = 32
-TerrainResolutionY = 32 * 8
-TerrainWidth = 1.0  # Width of one terrain chunk in world coordinates.
-TerrainHeight = 8.0  # Height of one terrain chunk in world coordinates.
 
 
 class TerrainChunk:
@@ -30,9 +25,10 @@ class TerrainChunk:
     # and y coordinates on the fly and only have to use buffers for
     # the z values
     x, y = numpy.meshgrid(
-      numpy.linspace(0, TerrainWidth, TerrainResolutionX, dtype=numpy.float32),
-      numpy.linspace(-TerrainHeight / 2, TerrainHeight / 2,
-                     TerrainResolutionY, dtype=numpy.float32))
+      numpy.linspace(0, config.TerrainWidth, config.TerrainResolutionX,
+                     dtype=numpy.float32),
+      numpy.linspace(-config.TerrainHeight / 2, config.TerrainHeight / 2,
+                     config.TerrainResolutionY, dtype=numpy.float32))
     x = x + x_offset  # TODO: change this so each chunk uses "local" coordinates and we line things up elsewhere so we don't get creeping accuracy issues as we move far from the origin (i.e. re-center coordinates periodically)
 
     # TODO: generate some actually interesting terrain here, and pull in some data across chunks to make it nice and contiuous
@@ -56,15 +52,15 @@ class BaseTerrain:
   def __init__(self, shaders):
     self.shaders = shaders
 
-    row_buffer = [0, TerrainResolutionX]
-    for x in range(TerrainResolutionX - 1):
+    row_buffer = [0, config.TerrainResolutionX]
+    for x in range(config.TerrainResolutionX - 1):
       row_buffer.append(x + 1)
-      row_buffer.append(TerrainResolutionX + x + 1)
+      row_buffer.append(config.TerrainResolutionX + x + 1)
     row_buffer = numpy.array(row_buffer, dtype=numpy.int32)
     all_parts = [row_buffer]
-    for i in range(1, TerrainResolutionY - 1):
+    for i in range(1, config.TerrainResolutionY - 1):
       all_parts.append(numpy.array([PrimitiveRestartIndex], dtype=numpy.int32))
-      all_parts.append(row_buffer + (i * TerrainResolutionX))
+      all_parts.append(row_buffer + (i * config.TerrainResolutionX))
     self.index_buffer = numpy.concat(all_parts)
 
     self.index_vbo = GL.glGenBuffers(1)
