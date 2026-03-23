@@ -212,8 +212,9 @@ def main():
   shaders = shaders_module.Shaders()
   base_terrain = BaseTerrain(shaders)
 
-  #cube_with_legs = animated_mesh.AnimatedMesh('cube_with_legs00.vbo')
+  cube_with_legs = animated_mesh.AnimatedMesh('cube_with_legs00.vbo')
 
+  st = time.time()
   prev_frame = time.time()
   x = 2.0
   y = 0.0
@@ -249,13 +250,13 @@ def main():
     sun_direction = numpy.array([math.cos(sun_angle), 0, math.sin(sun_angle)])
     base_terrain.Render(transform_matrix, sun_direction)
 
-    #GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
-    #GL.glTranslate(x + 0.5, -0.5, 0.5)
-    #GL.glScale(0.2, 0.2, 0.2)
-    #GL.glRotate(90, 1, 0, 0)
-    #GL.glRotate(90, 0, 1, 0)
-    #cube_with_legs.Render(
-    #  int((time.time() - st) * 30) % cube_with_legs.num_frames)
+    GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
+    GL.glTranslate(x, y - 1.5, 0.5)
+    GL.glScale(0.2, 0.2, 0.2)
+    GL.glRotate(90, 1, 0, 0)
+    GL.glRotate(90, 0, 1, 0)
+    cube_with_legs.Render(
+      int((time.time() - st) * 30) % cube_with_legs.num_frames)
 
     pygame.display.flip()
 
