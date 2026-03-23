@@ -213,6 +213,7 @@ def main():
   base_terrain = BaseTerrain(shaders)
 
   cube_with_legs = animated_mesh.AnimatedMesh('cube_with_legs00.vbo')
+  cube_animation_time = 0.0
 
   st = time.time()
   prev_frame = time.time()
@@ -256,7 +257,7 @@ def main():
     GL.glRotate(90, 1, 0, 0)
     GL.glRotate(90, 0, 1, 0)
     cube_with_legs.Render(
-      int((time.time() - st) * 30) % cube_with_legs.num_frames)
+      int(cube_animation_time * 30) % cube_with_legs.num_frames)
 
     pygame.display.flip()
 
@@ -272,14 +273,21 @@ def main():
       break
 
     pressed = pygame.key.get_pressed()
+    moving = False
     if pressed[pygame.K_LEFT]:
       x -= 2 * delta
+      moving = True
     if pressed[pygame.K_RIGHT]:
       x += 2 * delta
+      moving = True
     if pressed[pygame.K_UP]:
       y += 2 * delta
+      moving = True
     if pressed[pygame.K_DOWN]:
       y -= 2 * delta
+      moving = True
+    if moving:
+      cube_animation_time += delta
 
 
 if __name__ == '__main__':
