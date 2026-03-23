@@ -6,6 +6,7 @@ import pygame
 import sys
 import time
 
+import animated_mesh
 import shaders as shaders_module
 
 
@@ -131,6 +132,8 @@ def main():
   shaders = shaders_module.Shaders()
   base_terrain = BaseTerrain(shaders)
 
+  #cube_with_legs = animated_mesh.AnimatedMesh('cube_with_legs00.vbo')
+
   st = time.time()
   while True:
     x = (time.time() - st) * 0.5
@@ -158,6 +161,14 @@ def main():
 
     sun_direction = numpy.array([math.sin(0.5), 0, math.cos(0.5)])
     base_terrain.Render(transform_matrix, normal_matrix, sun_direction)
+
+    #GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
+    #GL.glTranslate(x + 0.5, -0.5, 0.5)
+    #GL.glScale(0.2, 0.2, 0.2)
+    #GL.glRotate(90, 1, 0, 0)
+    #GL.glRotate(90, 0, 1, 0)
+    #cube_with_legs.Render(
+    #  int((time.time() - st) * 30) % cube_with_legs.num_frames)
 
     pygame.display.flip()
 
