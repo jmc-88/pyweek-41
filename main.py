@@ -79,6 +79,8 @@ class BaseTerrain:
     GL.glBindVertexArray(self.vao)
     GL.glVertexAttribFormat(0, 1, GL.GL_FLOAT, GL.GL_FALSE, 0)
     GL.glVertexAttribFormat(1, 3, GL.GL_FLOAT, GL.GL_FALSE, 4)
+    GL.glVertexAttribBinding(0, 0)
+    GL.glVertexAttribBinding(1, 0)
 
   def SetOffset(self, x):
     while self.next_chunk < x + 4:
@@ -105,8 +107,6 @@ class BaseTerrain:
       #GL.glVertexAttribPointer(0, 1, GL.GL_FLOAT, GL.GL_FALSE, 16, 0)
 
       GL.glBindVertexBuffer(0, chunk.vbo, 0, 16)
-      GL.glVertexAttribBinding(0, 0)
-      GL.glVertexAttribBinding(1, 0)
       GL.glUniform1f(1, chunk.x_offset)
       GL.glDrawElements(GL.GL_TRIANGLE_STRIP, self.index_buffer.shape[0], GL.GL_UNSIGNED_INT, None)
 
