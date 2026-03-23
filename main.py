@@ -17,6 +17,73 @@ ScreenHeight = 810
 PrimitiveRestartIndex = 2000000000  # Arbitrary number higher than any vertex index we plan to use.
 
 
+# Inspired by https://youtu.be/BFld4EBO2RE
+def S(l):
+  return 3 * numpy.power(l, 2) - 2 * numpy.power(l, 3)
+
+def S_diff(l):
+  return 6 * l - 6 * numpy.power(l, 2)
+
+def f(v):
+  ij, vo = numpy.divmod(v, 1)
+
+  def pseudo(v):
+    v = v.astype(numpy.float64)
+    uv = numpy.divmod(v / numpy.e, 1)[1] * 123
+    a = uv[..., 0] * uv[..., 1] * (uv[..., 0] + uv[..., 1])
+    r = numpy.divmod(a, 1)[1]
+    return r * 2 - 1
+
+  aij = pseudo(ij)
+  bij = pseudo(ij + [[1, 0]])
+  cij = pseudo(ij + [[0, 1]])
+  dij = pseudo(ij + [[1, 1]])
+
+  z = (aij
+       + (bij - aij) * S(vo[..., 0])
+       + (cij - aij) * S(vo[..., 1])
+       + (aij - bij - cij + dij) * S(vo[..., 0]) * S(vo[..., 1]))
+  return z
+
+def f_dx(v):
+  ij, vo = numpy.divmod(v, 1)
+
+  def pseudo(v):
+    v = v.astype(numpy.float64)
+    uv = numpy.divmod(v / numpy.e, 1)[1] * 123
+    a = uv[..., 0] * uv[..., 1] * (uv[..., 0] + uv[..., 1])
+    r = numpy.divmod(a, 1)[1]
+    return r * 2 - 1
+
+  aij = pseudo(ij)
+  bij = pseudo(ij + [[1, 0]])
+  cij = pseudo(ij + [[0, 1]])
+  dij = pseudo(ij + [[1, 1]])
+
+  z = ((bij - aij) * S_diff(vo[..., 0])
+       + (aij - bij - cij + dij) * S_diff(vo[..., 0]) * S(vo[..., 1]))
+  return z
+
+def f_dy(v):
+  ij, vo = numpy.divmod(v, 1)
+
+  def pseudo(v):
+    v = v.astype(numpy.float64)
+    uv = numpy.divmod(v / numpy.e, 1)[1] * 123
+    a = uv[..., 0] * uv[..., 1] * (uv[..., 0] + uv[..., 1])
+    r = numpy.divmod(a, 1)[1]
+    return r * 2 - 1
+
+  aij = pseudo(ij)
+  bij = pseudo(ij + [[1, 0]])
+  cij = pseudo(ij + [[0, 1]])
+  dij = pseudo(ij + [[1, 1]])
+
+  z = ((cij - aij) * S_diff(vo[..., 1])
+       + (aij - bij - cij + dij) * S(vo[..., 0]) * S_diff(vo[..., 1]))
+  return z
+
+
 class TerrainChunk:
   def __init__(self, x_offset):
     self.x_offset = x_offset
@@ -32,10 +99,22 @@ class TerrainChunk:
     x = x + x_offset  # TODO: change this so each chunk uses "local" coordinates and we line things up elsewhere so we don't get creeping accuracy issues as we move far from the origin (i.e. re-center coordinates periodically)
 
     # TODO: generate some actually interesting terrain here, and pull in some data across chunks to make it nice and contiuous
-    self.z = numpy.sin(x * 8) * 0.05 + numpy.sin(y * 5) * 0.05 - 0.0
-    normals = numpy.stack([-numpy.cos(x * 8) * 8 * 0.05, -numpy.cos(y * 5) * 5 * 0.05, numpy.ones_like(x)], -1)
-    normals = normals / numpy.linalg.norm(normals, axis=2, keepdims=True)
 
+    # Basic sine wave terrain:
+    #self.z = numpy.sin(x * 8) * 0.05 + numpy.sin(y * 5) * 0.05 - 0.0
+    #normals = numpy.stack([-numpy.cos(x * 8) * 8 * 0.05, -numpy.cos(y * 5) * 5 * 0.05, numpy.ones_like(x)], -1)
+
+    p = numpy.stack([x, y], -1)
+    M = numpy.array([[4/5, -3/5], [3/5, 4/5]])
+    self.z = f(p) * 0.2
+    # More high-freq variation, but need some work to compute the normals for this one:
+    #M = numpy.array([[4/5, -3/5], [3/5, 4/5]])
+    #self.z = f(p) * 0.2 + f(2 * p @ M) * 0.1
+    self.z = self.z.astype(numpy.float32)
+    normals = numpy.stack([-f_dx(p) * 0.2, -f_dy(p) * 0.2, numpy.ones_like(x)], -1)
+    normals = normals.astype(numpy.float32)
+
+    normals = normals / numpy.linalg.norm(normals, axis=2, keepdims=True)
     data = numpy.concat([self.z.reshape(-1, 1), normals.reshape(-1, 3)], -1)
 
     vbo = GL.glGenBuffers(1)
@@ -45,7 +124,8 @@ class TerrainChunk:
     self.vbo = vbo
 
   def __del__(self):
-    GL.glDeleteBuffers(1, [self.vbo])
+    if hasattr(self, 'vbo'):
+      GL.glDeleteBuffers(1, [self.vbo])
 
 
 class BaseTerrain:
@@ -80,8 +160,12 @@ class BaseTerrain:
     GL.glVertexAttribBinding(1, 0)
 
   def SetOffset(self, x):
-    while self.next_chunk < x + 4:
-      self.chunks.append(TerrainChunk(self.next_chunk))
+    # To debug chunk generation with just one chunk:
+    #if not self.chunks:
+    #  self.chunks.append(TerrainChunk(self.next_chunk * config.TerrainWidth))
+    #return
+    while self.next_chunk * config.TerrainWidth < x + config.TerrainWidth * 2:
+      self.chunks.append(TerrainChunk(self.next_chunk * config.TerrainWidth))
       self.next_chunk += 1
     if len(self.chunks) > 6:
       del self.chunks[:-6]
