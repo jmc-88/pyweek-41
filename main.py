@@ -248,16 +248,12 @@ def main():
 
     done = False
     for event in pygame.event.get():
-      if event.type == pygame.QUIT:
-        done = True
-        break
-      elif event.type == pygame.KEYDOWN:
-        if event.key == pygame.K_ESCAPE:
+      match event:
+        case (
+            pygame.Event(type=pygame.QUIT)
+            | pygame.Event(type=pygame.KEYDOWN, key=pygame.K_ESCAPE)
+        ):
           done = True
-          break
-      else:
-        pass
-        #print('event=%r' % event)
     if done:
       break
 
