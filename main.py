@@ -167,8 +167,8 @@ class BaseTerrain:
     while self.next_chunk * config.TerrainWidth < x + config.TerrainWidth * 3:
       self.chunks.append(TerrainChunk(self.next_chunk * config.TerrainWidth))
       self.next_chunk += 1
-    if len(self.chunks) > 6:
-      del self.chunks[:-6]
+    if len(self.chunks) > 7:
+      del self.chunks[:-7]
 
   def Render(self, transform_matrix, sun_direction):
     GL.glColor(1, 1, 1)
@@ -214,9 +214,17 @@ def main():
 
   #cube_with_legs = animated_mesh.AnimatedMesh('cube_with_legs00.vbo')
 
-  st = time.time()
+  prev_frame = time.time()
+  x = 2.0
+  y = 0.0
+  night_progress = 0.0
   while True:
-    x = (time.time() - st) * 0.5
+    now = time.time()
+    delta = now - prev_frame
+    prev_frame = now
+
+    night_progress += 0.5 * delta
+
     base_terrain.SetOffset(x)
     GL.glClearColor(0, 0, 0, 0)
     GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
@@ -226,14 +234,19 @@ def main():
     GL.glLoadIdentity()
     GL.glFrustum(-0.16, 0.16, -0.1, 0.1, 0.1, 100.0)
     GL.glRotate(-30, 1, 0, 0)
-    GL.glTranslate(-x, 3, -2)
+    GL.glTranslate(-x, 3 - y, -2)
     transform_matrix = GL.glGetFloat(GL.GL_PROJECTION_MATRIX)
 
     GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
     GL.glDisable(GL.GL_CULL_FACE)
     GL.glEnable(GL.GL_DEPTH_TEST)
 
-    sun_direction = numpy.array([math.sin(0.5), 0, math.cos(0.5)])
+    distance_to_night = x - night_progress
+    sun_angle = 10 + (distance_to_night - 0.2) / 20 * 70
+    sun_angle = max(10, sun_angle)
+    sun_angle = min(80, sun_angle)
+    sun_angle = sun_angle / 180 * math.pi
+    sun_direction = numpy.array([math.cos(sun_angle), 0, math.sin(sun_angle)])
     base_terrain.Render(transform_matrix, sun_direction)
 
     #GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
@@ -256,6 +269,16 @@ def main():
           done = True
     if done:
       break
+
+    pressed = pygame.key.get_pressed()
+    if pressed[pygame.K_LEFT]:
+      x -= 2 * delta
+    if pressed[pygame.K_RIGHT]:
+      x += 2 * delta
+    if pressed[pygame.K_UP]:
+      y += 2 * delta
+    if pressed[pygame.K_DOWN]:
+      y -= 2 * delta
 
 
 if __name__ == '__main__':
