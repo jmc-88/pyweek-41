@@ -279,6 +279,8 @@ def main():
             | pygame.Event(type=pygame.KEYDOWN, key=pygame.K_ESCAPE)
         ):
           done = True
+        case pygame.Event(type=pygame.KEYDOWN, key=pygame.K_f):
+          pygame.display.toggle_fullscreen()
     if done:
       break
 
