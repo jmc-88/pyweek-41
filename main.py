@@ -200,11 +200,22 @@ class BaseTerrain:
 
 def main():
   pygame.init()
-  screen = pygame.display.set_mode(
-    (ScreenWidth, ScreenHeight),
-    pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE)
 
-  GL.glViewport(0, 0, ScreenWidth, ScreenHeight)
+  screen_flags = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
+  screen_res = (ScreenWidth, ScreenHeight)
+
+  if config.Fullscreen:
+    dpy_info = pygame.display.Info()
+    if dpy_info.current_w == -1 or dpy_info.current_h == -1:
+      raise RuntimeError(
+          "Couldn't determine the current screen resolution "
+          "to enter fullscreen mode."
+      )
+    screen_flags |= pygame.FULLSCREEN
+    screen_res = (dpy_info.current_w, dpy_info.current_h)
+
+  pygame.display.set_mode(screen_res, screen_flags)
+  GL.glViewport(0, 0, *screen_res)
 
   GL.glPrimitiveRestartIndex(PrimitiveRestartIndex)
   GL.glEnable(GL.GL_PRIMITIVE_RESTART)
