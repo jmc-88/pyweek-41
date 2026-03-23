@@ -164,13 +164,13 @@ class BaseTerrain:
     #if not self.chunks:
     #  self.chunks.append(TerrainChunk(self.next_chunk * config.TerrainWidth))
     #return
-    while self.next_chunk * config.TerrainWidth < x + config.TerrainWidth * 2:
+    while self.next_chunk * config.TerrainWidth < x + config.TerrainWidth * 3:
       self.chunks.append(TerrainChunk(self.next_chunk * config.TerrainWidth))
       self.next_chunk += 1
     if len(self.chunks) > 6:
       del self.chunks[:-6]
 
-  def Render(self, transform_matrix, normal_matrix, sun_direction):
+  def Render(self, transform_matrix, sun_direction):
     GL.glColor(1, 1, 1)
 
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.index_vbo)
@@ -224,15 +224,9 @@ def main():
     # This is ugly but I'm lazy and this kinda works.
     GL.glMatrixMode(GL.GL_PROJECTION)
     GL.glLoadIdentity()
-    GL.glRotate(-50, 1, 0, 0)
-    GL.glTranslate(-x, 2, -1)
-    normal_matrix = GL.glGetFloat(GL.GL_PROJECTION_MATRIX)
-    normal_matrix = normal_matrix[:3, :3]
-
-    GL.glLoadIdentity()
     GL.glFrustum(-0.16, 0.16, -0.1, 0.1, 0.1, 100.0)
-    GL.glRotate(-50, 1, 0, 0)
-    GL.glTranslate(-x, 2, -1)
+    GL.glRotate(-30, 1, 0, 0)
+    GL.glTranslate(-x, 3, -2)
     transform_matrix = GL.glGetFloat(GL.GL_PROJECTION_MATRIX)
 
     GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
@@ -240,7 +234,7 @@ def main():
     GL.glEnable(GL.GL_DEPTH_TEST)
 
     sun_direction = numpy.array([math.sin(0.5), 0, math.cos(0.5)])
-    base_terrain.Render(transform_matrix, normal_matrix, sun_direction)
+    base_terrain.Render(transform_matrix, sun_direction)
 
     #GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
     #GL.glTranslate(x + 0.5, -0.5, 0.5)
