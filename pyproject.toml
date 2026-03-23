@@ -9,3 +9,8 @@ dependencies = [
     "pygame-ce>=2.5.7",
     "pyopengl>=3.1.10",
 ]
+
+[dependency-groups]
+dev = [
+    "nuitka[all]>=4.0.6",
+]

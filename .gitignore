@@ -32,6 +32,12 @@ MANIFEST
 *.manifest
 *.spec
 
+# Nuitka
+#  Default build directory names for the `onefile` and `app` compilation modes.
+/*.build/
+/*.dist/
+/*.onefile-build/
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
