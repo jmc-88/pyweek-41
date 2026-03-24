@@ -329,8 +329,8 @@ def main():
     #GL.glScale(0.2, 0.2, 0.2)
     #GL.glRotate(90, 1, 0, 0)
     #GL.glRotate(90, 0, 1, 0)
-    cube_with_legs.Render(
-      int(cube_animation_time * 30) % cube_with_legs.num_frames)
+    #cube_with_legs.Render(
+    #  int(cube_animation_time * 30) % cube_with_legs.num_frames)
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
 
     if False:
@@ -346,9 +346,9 @@ def main():
     GL.glViewport(0, 0, *screen_res)
     GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
     # This is ugly but I'm lazy and this kinda works.
-    GL.glMatrixMode(GL.GL_PROJECTION)
-    GL.glLoadIdentity()
-    GL.glFrustum(-0.16, 0.16, -0.1, 0.1, 0.1, 100.0)
+    #GL.glMatrixMode(GL.GL_PROJECTION)
+    #GL.glLoadIdentity()
+    #GL.glFrustum(-0.16, 0.16, -0.1, 0.1, 0.1, 100.0)
     left = -0.16
     right = 0.16
     bottom = -0.1
@@ -360,7 +360,7 @@ def main():
        [0, 2 * nearval / (top - bottom), (top + bottom) / (top - bottom), 0],
        [0, 0, -(farval + nearval) / (farval - nearval), - 2 * farval * nearval / (farval - nearval)],
        [0, 0, -1, 0]], dtype=numpy.float32)
-    GL.glRotate(-30, 1, 0, 0)
+    #GL.glRotate(-30, 1, 0, 0)
     sa = math.sin(-30 / 180 * math.pi)
     ca = math.cos(-30 / 180 * math.pi)
     matrix = matrix @ numpy.array(
