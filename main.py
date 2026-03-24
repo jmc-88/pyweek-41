@@ -9,6 +9,7 @@ import time
 
 import animated_mesh
 import config
+import matrix
 import shaders as shaders_module
 import shadows
 
@@ -293,37 +294,10 @@ def main():
     but it's going to be centered on x, y roughly so just go with that for now
     x-4 to x+4, y-4 to y+4
     """
-    # TODO: do properly
-    #GL.glMatrixMode(GL.GL_PROJECTION)
-    #GL.glLoadIdentity()
-    #GL.glOrtho(-4, 4, -4, 4, -10, 10)
-    left = -4
-    right = 4
-    bottom = -4
-    top = 4
-    nearval = -10
-    farval = 10
-    matrix = numpy.array(
-      [[2 / (right - left), 0, 0, -(right + left) / (right - left)],
-       [0, 2 / (top - bottom), 0, -(top + bottom) / (top - bottom)],
-       [0, 0, -2 / (farval - nearval), -(farval + nearval) / (farval - nearval)],
-       [0, 0, 0, 1]], dtype=numpy.float32)
-    #GL.glRotate(90 - sun_angle, 0, -1, 0)
-    sa = math.sin((90 - sun_angle) / 180 * math.pi)
-    ca = math.cos((90 - sun_angle) / 180 * math.pi)
-    matrix = matrix @ numpy.array(
-      [[ca, 0, -sa, 0],
-       [0, 1, 0, 0],
-       [sa, 0, ca, 0],
-       [0, 0, 0, 1]], dtype=numpy.float32)
-    #GL.glTranslate(-x, -y, 0)
-    matrix = matrix @ numpy.array(
-      [[1, 0, 0, -x],
-       [0, 1, 0, -y],
-       [0, 0, 1, 0],
-       [0, 0, 0, 1]], dtype=numpy.float32)
-    matrix = matrix.T
-    render_state.shadow_transform_matrix = matrix
+    mat = matrix.Ortho(-4, 4, -4, 4, -10, 10)
+    mat = matrix.Rotate(90 - sun_angle, 0, -1, 0) @ mat
+    mat = matrix.Translate(-x, -y, 0) @ mat
+    render_state.shadow_transform_matrix = mat
     GL.glViewport(0, 0, config.ShadowMapRes, config.ShadowMapRes)
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, shadow_map.fbo)
     GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
@@ -349,37 +323,11 @@ def main():
     ## Actual rendering
     GL.glViewport(0, 0, *screen_res)
     GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
-    # This is ugly but I'm lazy and this kinda works.
-    #GL.glMatrixMode(GL.GL_PROJECTION)
-    #GL.glLoadIdentity()
-    #GL.glFrustum(-0.16, 0.16, -0.1, 0.1, 0.1, 100.0)
-    left = -0.16
-    right = 0.16
-    bottom = -0.1
-    top = 0.1
-    nearval = 0.1
-    farval = 100.0
-    matrix = numpy.array(
-      [[2 * nearval / (right - left), 0, (right + left) / (right - left), 0],
-       [0, 2 * nearval / (top - bottom), (top + bottom) / (top - bottom), 0],
-       [0, 0, -(farval + nearval) / (farval - nearval), - 2 * farval * nearval / (farval - nearval)],
-       [0, 0, -1, 0]], dtype=numpy.float32)
-    #GL.glRotate(-30, 1, 0, 0)
-    sa = math.sin(-30 / 180 * math.pi)
-    ca = math.cos(-30 / 180 * math.pi)
-    matrix = matrix @ numpy.array(
-      [[1, 0, 0, 0],
-       [0, ca, -sa, 0],
-       [0, sa, ca, 0],
-       [0, 0, 0, 1]], dtype=numpy.float32)
-    #GL.glTranslate(-x, 3 - y, -2)
-    matrix = matrix @ numpy.array(
-      [[1, 0, 0, -x],
-       [0, 1, 0, 3 - y],
-       [0, 0, 1, -2],
-       [0, 0, 0, 1]], dtype=numpy.float32)
-    matrix = matrix.T
-    render_state.transform_matrix = matrix
+
+    mat = matrix.Frustum(-0.16, 0.16, -0.1, 0.1, 0.1, 100.0)
+    mat = matrix.Rotate(-30, 1, 0, 0) @ mat
+    mat = matrix.Translate(-x, 3 - y, -2) @ mat
+    render_state.transform_matrix = mat
 
     base_terrain.Render(render_state, shadow=False)
 
