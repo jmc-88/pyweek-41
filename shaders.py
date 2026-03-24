@@ -32,3 +32,11 @@ class Shaders:
         shaders.compileShader(
             self._AddDefines(open('terrain.frag', 'rt').read()),
             GL.GL_FRAGMENT_SHADER))
+
+    self.terrain_program_shadow = shaders.compileProgram(
+        shaders.compileShader(
+            self._AddDefines(open('terrain.vert', 'rt').read()),
+            GL.GL_VERTEX_SHADER),
+        shaders.compileShader(
+            self._AddDefines(open('shadow_map.frag', 'rt').read()),
+            GL.GL_FRAGMENT_SHADER))

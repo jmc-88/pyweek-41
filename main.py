@@ -3,11 +3,13 @@ import numpy
 import OpenGL
 from OpenGL import GL
 import pygame
+import sys
 import time
 
 import animated_mesh
 import config
 import shaders as shaders_module
+import shadows
 
 
 ScreenWidth = 1440
@@ -169,14 +171,26 @@ class BaseTerrain:
     if len(self.chunks) > 7:
       del self.chunks[:-7]
 
-  def Render(self, transform_matrix, sun_direction):
+  def Render(self, render_state, shadow=False):
     GL.glColor(1, 1, 1)
 
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.index_vbo)
 
-    GL.glUseProgram(self.shaders.terrain_program)
-    GL.glUniformMatrix4fv(0, 1, GL.GL_FALSE, transform_matrix)
-    GL.glUniform3f(5, sun_direction[0], sun_direction[1], sun_direction[2])
+    if shadow:
+      GL.glUseProgram(self.shaders.terrain_program_shadow)
+      GL.glUniformMatrix4fv(0, 1, GL.GL_FALSE, render_state.shadow_transform_matrix)
+    else:
+      GL.glUseProgram(self.shaders.terrain_program)
+      GL.glUniformMatrix4fv(0, 1, GL.GL_FALSE, render_state.transform_matrix)
+      GL.glUniformMatrix4fv(2, 1, GL.GL_FALSE, render_state.shadow_transform_matrix)
+      GL.glUniform3f(5,
+                     render_state.sun_direction[0],
+                     render_state.sun_direction[1],
+                     render_state.sun_direction[2])
+      GL.glActiveTexture(GL.GL_TEXTURE0);
+      GL.glBindTexture(GL.GL_TEXTURE_2D, render_state.shadow_tex);
+      GL.glUniform1i(6, 0);
+
     GL.glBindVertexArray(self.vao)
     GL.glEnableVertexAttribArray(0)
     GL.glEnableVertexAttribArray(1)
@@ -197,6 +211,13 @@ class BaseTerrain:
     GL.glUseProgram(0)
 
 
+class RenderState:
+  sun_direction = None
+  transform_matrix = None
+  shadow_transform_matrix = None
+  shadow_tex = None
+
+
 def main():
   pygame.init()
 
@@ -214,16 +235,25 @@ def main():
     screen_res = (dpy_info.current_w, dpy_info.current_h)
 
   pygame.display.set_mode(screen_res, screen_flags)
-  GL.glViewport(0, 0, *screen_res)
 
   GL.glPrimitiveRestartIndex(PrimitiveRestartIndex)
   GL.glEnable(GL.GL_PRIMITIVE_RESTART)
+
+  GL.glDisable(GL.GL_CULL_FACE)
+  GL.glEnable(GL.GL_DEPTH_TEST)
+  GL.glClearColor(0, 0, 0, 0)
+  GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
 
   shaders = shaders_module.Shaders()
   base_terrain = BaseTerrain(shaders)
 
   cube_with_legs = animated_mesh.AnimatedMesh('cube_with_legs00.vbo')
   cube_animation_time = 0.0
+
+  render_state = RenderState()
+
+  shadow_map = shadows.ShadowMap()
+  render_state.shadow_tex = shadow_map.tex
 
   st = time.time()
   prev_frame = time.time()
@@ -236,32 +266,69 @@ def main():
     prev_frame = now
 
     night_progress += 0.5 * delta
-
+    distance_to_night = x - night_progress
+    sun_angle_min = 5
+    sun_angle_max = 80
+    sun_angle = sun_angle_min + (distance_to_night - 0.2) / 20 * (sun_angle_max - sun_angle_min)
+    sun_angle = max(sun_angle_min, sun_angle)
+    sun_angle = min(sun_angle_max, sun_angle)
+    sun_angle_rad = sun_angle / 180 * math.pi
+    render_state.sun_direction = numpy.array([math.cos(sun_angle_rad), 0, math.sin(sun_angle_rad)])
     base_terrain.SetOffset(x)
-    GL.glClearColor(0, 0, 0, 0)
-    GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
+    # Shadow map
+    GL.glMatrixMode(GL.GL_PROJECTION)
+    GL.glLoadIdentity()
+    """
+    Want to figure out what part of ground plane this can see:
+
+    GL.glFrustum(-0.16, 0.16, -0.1, 0.1, 0.1, 100.0)
+    GL.glRotate(-30, 1, 0, 0)
+    GL.glTranslate(-x, 3 - y, -2)
+
+    but it's going to be centered on x, y roughly so just go with that for now
+    x-4 to x+4, y-4 to y+4
+    """
+    # TODO: do properly
+    GL.glOrtho(-4, 4, -4, 4, -10, 10)
+    GL.glRotate(90 - sun_angle, 0, -1, 0)
+    GL.glTranslate(-x, -y, 0)
+    render_state.shadow_transform_matrix = GL.glGetFloat(GL.GL_PROJECTION_MATRIX)
+    GL.glViewport(0, 0, config.ShadowMapRes, config.ShadowMapRes)
+    GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, shadow_map.fbo)
+    GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
+    base_terrain.Render(render_state, shadow=True)
+    # TODO: clean up
+    GL.glTranslate(x, y - 1.5, 0.5)
+    GL.glScale(0.2, 0.2, 0.2)
+    GL.glRotate(90, 1, 0, 0)
+    GL.glRotate(90, 0, 1, 0)
+    cube_with_legs.Render(
+      int(cube_animation_time * 30) % cube_with_legs.num_frames)
+    GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
+
+    if False:
+      data = numpy.zeros([config.ShadowMapRes, config.ShadowMapRes], dtype=numpy.float32)
+      GL.glGetTextureImage(shadow_map.tex, 0, GL.GL_DEPTH_COMPONENT, GL.GL_FLOAT, 1024*1024*4, data)
+      data = (data * 255).astype(numpy.uint8)
+      from PIL import Image
+      im = Image.fromarray(data)
+      im.save('depth.png')
+      sys.exit(1)
+
+    ## Actual rendering
+    GL.glViewport(0, 0, *screen_res)
+    GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
     # This is ugly but I'm lazy and this kinda works.
     GL.glMatrixMode(GL.GL_PROJECTION)
     GL.glLoadIdentity()
     GL.glFrustum(-0.16, 0.16, -0.1, 0.1, 0.1, 100.0)
     GL.glRotate(-30, 1, 0, 0)
     GL.glTranslate(-x, 3 - y, -2)
-    transform_matrix = GL.glGetFloat(GL.GL_PROJECTION_MATRIX)
+    render_state.transform_matrix = GL.glGetFloat(GL.GL_PROJECTION_MATRIX)
 
-    GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
-    GL.glDisable(GL.GL_CULL_FACE)
-    GL.glEnable(GL.GL_DEPTH_TEST)
+    base_terrain.Render(render_state, shadow=False)
 
-    distance_to_night = x - night_progress
-    sun_angle = 10 + (distance_to_night - 0.2) / 20 * 70
-    sun_angle = max(10, sun_angle)
-    sun_angle = min(80, sun_angle)
-    sun_angle = sun_angle / 180 * math.pi
-    sun_direction = numpy.array([math.cos(sun_angle), 0, math.sin(sun_angle)])
-    base_terrain.Render(transform_matrix, sun_direction)
-
-    GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_LINE)
     GL.glTranslate(x, y - 1.5, 0.5)
     GL.glScale(0.2, 0.2, 0.2)
     GL.glRotate(90, 1, 0, 0)
@@ -281,6 +348,7 @@ def main():
           done = True
         case pygame.Event(type=pygame.KEYDOWN, key=pygame.K_f):
           pygame.display.toggle_fullscreen()
+          screen_res = pygame.display.get_window_size()
     if done:
       break
 
