@@ -1,3 +1,4 @@
+import ctypes
 import math
 import numpy
 import OpenGL
@@ -153,10 +154,8 @@ class BaseTerrain:
     self.next_chunk = 0
     self.SetOffset(0)
 
-    self.vbo = GL.glGenBuffers(1)
-    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vbo)
-    GL.glVertexAttribPointer(0, 1, GL.GL_FLOAT, GL.GL_FALSE, 0, None)
-    GL.glVertexAttribPointer(1, 3, GL.GL_FLOAT, GL.GL_FALSE, 4, None)
+    self.vao = GL.glGenVertexArrays(1)
+    GL.glBindVertexArray(self.vao)
 
   def SetOffset(self, x):
     # To debug chunk generation with just one chunk:
@@ -170,36 +169,38 @@ class BaseTerrain:
       del self.chunks[:-7]
 
   def Render(self, render_state, shadow=False):
-    GL.glColor(1, 1, 1)
-
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.index_vbo)
 
     if shadow:
       GL.glUseProgram(self.shaders.terrain_program_shadow)
-      GL.glUniformMatrix4fv(0, 1, GL.GL_FALSE, render_state.shadow_transform_matrix)
+      GL.glUniformMatrix4fv(
+        GL.glGetUniformLocation(self.shaders.terrain_program_shadow, 'transform'),
+        1, GL.GL_FALSE, render_state.shadow_transform_matrix)
     else:
       GL.glUseProgram(self.shaders.terrain_program)
-      GL.glUniformMatrix4fv(0, 1, GL.GL_FALSE, render_state.transform_matrix)
-      GL.glUniformMatrix4fv(2, 1, GL.GL_FALSE, render_state.shadow_transform_matrix)
-      GL.glUniform3f(5,
+      GL.glUniformMatrix4fv(GL.glGetUniformLocation(self.shaders.terrain_program, 'transform'), 1, GL.GL_FALSE, render_state.transform_matrix)
+      GL.glUniformMatrix4fv(GL.glGetUniformLocation(self.shaders.terrain_program, 'shadow_map_transform'), 1, GL.GL_FALSE, render_state.shadow_transform_matrix)
+      GL.glUniform3f(GL.glGetUniformLocation(self.shaders.terrain_program, 'sun_direction'),
                      render_state.sun_direction[0],
                      render_state.sun_direction[1],
                      render_state.sun_direction[2])
       GL.glActiveTexture(GL.GL_TEXTURE0);
       GL.glBindTexture(GL.GL_TEXTURE_2D, render_state.shadow_tex);
-      GL.glUniform1i(6, 0);
+      GL.glUniform1i(GL.glGetUniformLocation(self.shaders.terrain_program, 'shadow_map'), 0);
 
     GL.glBindVertexArray(self.vao)
     GL.glEnableVertexAttribArray(0)
     GL.glEnableVertexAttribArray(1)
 
     for chunk in self.chunks:
-      # TODO: Why does this not work? Should be equivalent to the below, I thought...
-      #GL.glBindBuffer(GL.GL_ARRAY_BUFFER, chunk.vbo)
-      #GL.glVertexAttribPointer(0, 1, GL.GL_FLOAT, GL.GL_FALSE, 16, 0)
+      GL.glBindBuffer(GL.GL_ARRAY_BUFFER, chunk.vbo)
+      GL.glVertexAttribPointer(0, 1, GL.GL_FLOAT, GL.GL_FALSE, 16, None)
+      GL.glVertexAttribPointer(1, 3, GL.GL_FLOAT, GL.GL_FALSE, 16, ctypes.c_void_p(4))
 
-      GL.glBindVertexBuffer(0, chunk.vbo, 0, 16)
-      GL.glUniform1f(1, chunk.x_offset)
+      if shadow:
+        GL.glUniform1f(GL.glGetUniformLocation(self.shaders.terrain_program_shadow, 'x_offset'), chunk.x_offset)
+      else:
+        GL.glUniform1f(GL.glGetUniformLocation(self.shaders.terrain_program, 'x_offset'), chunk.x_offset)
       GL.glDrawElements(GL.GL_TRIANGLE_STRIP, self.index_buffer.shape[0], GL.GL_UNSIGNED_INT, None)
 
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
@@ -323,8 +324,6 @@ def main():
        [0, 0, 0, 1]], dtype=numpy.float32)
     matrix = matrix.T
     render_state.shadow_transform_matrix = matrix
-    #render_state.shadow_transform_matrix = GL.glGetFloat(GL.GL_PROJECTION_MATRIX)
-
     GL.glViewport(0, 0, config.ShadowMapRes, config.ShadowMapRes)
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, shadow_map.fbo)
     GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
@@ -381,7 +380,6 @@ def main():
        [0, 0, 0, 1]], dtype=numpy.float32)
     matrix = matrix.T
     render_state.transform_matrix = matrix
-    #render_state.transform_matrix = GL.glGetFloat(GL.GL_PROJECTION_MATRIX)
 
     base_terrain.Render(render_state, shadow=False)
 
