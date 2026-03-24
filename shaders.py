@@ -1,9 +1,16 @@
 import OpenGL
 from OpenGL import GL
 from OpenGL.GL import shaders
+import re
 
 import config
 
+
+class _ProgramHolder:
+  pass
+
+
+_UniformRe = re.compile('uniform [^;]+ ([A-Za-z0-9_]+);')
 
 class Shaders:
   def _MakeDefines(self):
@@ -22,21 +29,26 @@ class Shaders:
     lines.insert(idx, self.defines)
     return '\n'.join(lines)
 
+  def _GetUniforms(self, shader_src):
+    u = set()
+    for m in _UniformRe.finditer(shader_src):
+      u.add(m.group(1))
+    return u
+
+  def _PrepShader(self, vert_path, frag_path):
+    vert_src = self._AddDefines(open(vert_path, 'rt').read())
+    frag_src = self._AddDefines(open(frag_path, 'rt').read())
+    uniforms = set(self._GetUniforms(vert_src))
+    uniforms.update(self._GetUniforms(frag_src))
+    program = _ProgramHolder()
+    program.id = shaders.compileProgram(
+        shaders.compileShader(vert_src, GL.GL_VERTEX_SHADER),
+        shaders.compileShader(frag_src, GL.GL_FRAGMENT_SHADER))
+    for u in uniforms:
+      setattr(program, u, GL.glGetUniformLocation(program.id, u))
+    return program
+
   def __init__(self):
     self.defines = self._MakeDefines()
-
-    self.terrain_program = shaders.compileProgram(
-        shaders.compileShader(
-            self._AddDefines(open('terrain.vert', 'rt').read()),
-            GL.GL_VERTEX_SHADER),
-        shaders.compileShader(
-            self._AddDefines(open('terrain.frag', 'rt').read()),
-            GL.GL_FRAGMENT_SHADER))
-
-    self.terrain_program_shadow = shaders.compileProgram(
-        shaders.compileShader(
-            self._AddDefines(open('terrain.vert', 'rt').read()),
-            GL.GL_VERTEX_SHADER),
-        shaders.compileShader(
-            self._AddDefines(open('shadow_map.frag', 'rt').read()),
-            GL.GL_FRAGMENT_SHADER))
+    self.terrain = self._PrepShader('terrain.vert', 'terrain.frag')
+    self.terrain_shadow = self._PrepShader('terrain.vert', 'shadow_map.frag')

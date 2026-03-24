@@ -172,21 +172,21 @@ class BaseTerrain:
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.index_vbo)
 
     if shadow:
-      GL.glUseProgram(self.shaders.terrain_program_shadow)
+      GL.glUseProgram(self.shaders.terrain_shadow.id)
       GL.glUniformMatrix4fv(
-        GL.glGetUniformLocation(self.shaders.terrain_program_shadow, 'transform'),
+        self.shaders.terrain_shadow.transform,
         1, GL.GL_FALSE, render_state.shadow_transform_matrix)
     else:
-      GL.glUseProgram(self.shaders.terrain_program)
-      GL.glUniformMatrix4fv(GL.glGetUniformLocation(self.shaders.terrain_program, 'transform'), 1, GL.GL_FALSE, render_state.transform_matrix)
-      GL.glUniformMatrix4fv(GL.glGetUniformLocation(self.shaders.terrain_program, 'shadow_map_transform'), 1, GL.GL_FALSE, render_state.shadow_transform_matrix)
-      GL.glUniform3f(GL.glGetUniformLocation(self.shaders.terrain_program, 'sun_direction'),
+      GL.glUseProgram(self.shaders.terrain.id)
+      GL.glUniformMatrix4fv(self.shaders.terrain.transform, 1, GL.GL_FALSE, render_state.transform_matrix)
+      GL.glUniformMatrix4fv(self.shaders.terrain.shadow_map_transform, 1, GL.GL_FALSE, render_state.shadow_transform_matrix)
+      GL.glUniform3f(self.shaders.terrain.sun_direction,
                      render_state.sun_direction[0],
                      render_state.sun_direction[1],
                      render_state.sun_direction[2])
-      GL.glActiveTexture(GL.GL_TEXTURE0);
-      GL.glBindTexture(GL.GL_TEXTURE_2D, render_state.shadow_tex);
-      GL.glUniform1i(GL.glGetUniformLocation(self.shaders.terrain_program, 'shadow_map'), 0);
+      GL.glActiveTexture(GL.GL_TEXTURE0)
+      GL.glBindTexture(GL.GL_TEXTURE_2D, render_state.shadow_tex)
+      GL.glUniform1i(self.shaders.terrain.shadow_map, 0)
 
     GL.glBindVertexArray(self.vao)
     GL.glEnableVertexAttribArray(0)
@@ -198,9 +198,9 @@ class BaseTerrain:
       GL.glVertexAttribPointer(1, 3, GL.GL_FLOAT, GL.GL_FALSE, 16, ctypes.c_void_p(4))
 
       if shadow:
-        GL.glUniform1f(GL.glGetUniformLocation(self.shaders.terrain_program_shadow, 'x_offset'), chunk.x_offset)
+        GL.glUniform1f(self.shaders.terrain_shadow.x_offset, chunk.x_offset)
       else:
-        GL.glUniform1f(GL.glGetUniformLocation(self.shaders.terrain_program, 'x_offset'), chunk.x_offset)
+        GL.glUniform1f(self.shaders.terrain.x_offset, chunk.x_offset)
       GL.glDrawElements(GL.GL_TRIANGLE_STRIP, self.index_buffer.shape[0], GL.GL_UNSIGNED_INT, None)
 
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
