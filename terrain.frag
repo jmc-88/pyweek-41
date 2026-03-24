@@ -1,7 +1,7 @@
-#version 430
+#version 410 core
 
-layout(location = 5) uniform vec3 sun_direction;
-layout(location = 6) uniform sampler2D shadow_map;
+uniform vec3 sun_direction;
+uniform sampler2D shadow_map;
 
 in vec3 normal;
 in vec3 shadow_map_position;

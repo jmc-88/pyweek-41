@@ -153,12 +153,10 @@ class BaseTerrain:
     self.next_chunk = 0
     self.SetOffset(0)
 
-    self.vao = GL.glGenVertexArrays(1)
-    GL.glBindVertexArray(self.vao)
-    GL.glVertexAttribFormat(0, 1, GL.GL_FLOAT, GL.GL_FALSE, 0)
-    GL.glVertexAttribFormat(1, 3, GL.GL_FLOAT, GL.GL_FALSE, 4)
-    GL.glVertexAttribBinding(0, 0)
-    GL.glVertexAttribBinding(1, 0)
+    self.vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vbo)
+    GL.glVertexAttribPointer(0, 1, GL.GL_FLOAT, GL.GL_FALSE, 0, None)
+    GL.glVertexAttribPointer(1, 3, GL.GL_FLOAT, GL.GL_FALSE, 4, None)
 
   def SetOffset(self, x):
     # To debug chunk generation with just one chunk:
@@ -221,6 +219,10 @@ class RenderState:
 def main():
   pygame.init()
 
+  pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MAJOR_VERSION, 3)
+  pygame.display.gl_set_attribute(pygame.GL_CONTEXT_MINOR_VERSION, 3)
+  pygame.display.gl_set_attribute(pygame.GL_CONTEXT_PROFILE_MASK, pygame.GL_CONTEXT_PROFILE_CORE)
+
   screen_flags = pygame.OPENGL | pygame.DOUBLEBUF | pygame.HWSURFACE
   screen_res = (ScreenWidth, ScreenHeight)
 
@@ -236,8 +238,11 @@ def main():
 
   pygame.display.set_mode(screen_res, screen_flags)
 
-  GL.glPrimitiveRestartIndex(PrimitiveRestartIndex)
   GL.glEnable(GL.GL_PRIMITIVE_RESTART)
+  GL.glPrimitiveRestartIndex(PrimitiveRestartIndex)
+
+  vao = GL.glGenVertexArrays(1)
+  GL.glBindVertexArray(vao)
 
   GL.glDisable(GL.GL_CULL_FACE)
   GL.glEnable(GL.GL_DEPTH_TEST)

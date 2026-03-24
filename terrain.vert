@@ -1,8 +1,8 @@
-#version 430
+#version 410 core
 
-layout(location = 0) uniform mat4 transform;
-layout(location = 1) uniform float x_offset;
-layout(location = 2) uniform mat4 shadow_map_transform;
+uniform mat4 transform;
+uniform float x_offset;
+uniform mat4 shadow_map_transform;
 
 layout(location = 0) in float z;
 layout(location = 1) in vec3 in_normal;
