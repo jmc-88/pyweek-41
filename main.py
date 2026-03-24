@@ -254,7 +254,7 @@ def main():
   shaders = shaders_module.Shaders()
   base_terrain = BaseTerrain(shaders)
 
-  cube_with_legs = animated_mesh.AnimatedMesh('cube_with_legs00.vbo')
+  cube_with_legs = animated_mesh.AnimatedMesh('cube_with_legs00.vbo', shaders)
   cube_animation_time = 0.0
 
   render_state = RenderState()
@@ -283,6 +283,8 @@ def main():
     render_state.sun_direction = numpy.array([math.cos(sun_angle_rad), 0, math.sin(sun_angle_rad)])
     base_terrain.SetOffset(x)
 
+    cube_with_legs_transform = matrix.Rotate(90, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2) @ matrix.Translate(x, y - 1.5, 0.5)
+
     # Shadow map
     """
     Want to figure out what part of ground plane this can see:
@@ -301,14 +303,13 @@ def main():
     GL.glViewport(0, 0, config.ShadowMapRes, config.ShadowMapRes)
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, shadow_map.fbo)
     GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
+
     base_terrain.Render(render_state, shadow=True)
-    # TODO: clean up
-    #GL.glTranslate(x, y - 1.5, 0.5)
-    #GL.glScale(0.2, 0.2, 0.2)
-    #GL.glRotate(90, 1, 0, 0)
-    #GL.glRotate(90, 0, 1, 0)
-    #cube_with_legs.Render(
-    #  int(cube_animation_time * 30) % cube_with_legs.num_frames)
+    cube_with_legs.Render(
+      int(cube_animation_time * 30) % cube_with_legs.num_frames,
+      render_state,
+      cube_with_legs_transform, shadow=True)
+
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
 
     if False:
@@ -330,13 +331,10 @@ def main():
     render_state.transform_matrix = mat
 
     base_terrain.Render(render_state, shadow=False)
-
-    #GL.glTranslate(x, y - 1.5, 0.5)
-    #GL.glScale(0.2, 0.2, 0.2)
-    #GL.glRotate(90, 1, 0, 0)
-    #GL.glRotate(90, 0, 1, 0)
-    #cube_with_legs.Render(
-    #  int(cube_animation_time * 30) % cube_with_legs.num_frames)
+    cube_with_legs.Render(
+      int(cube_animation_time * 30) % cube_with_legs.num_frames,
+      render_state,
+      cube_with_legs_transform)
 
     pygame.display.flip()
 

@@ -34,3 +34,11 @@ def Translate(x, y, z):
      [0, 1, 0, y],
      [0, 0, 1, z],
      [0, 0, 0, 1]], dtype=numpy.float32).T
+
+
+def Scale(x, y, z):
+  return numpy.array(
+    [[x, 0, 0, 0],
+     [0, y, 0, 0],
+     [0, 0, z, 0],
+     [0, 0, 0, 1]], dtype=numpy.float32).T

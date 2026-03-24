@@ -52,3 +52,6 @@ class Shaders:
     self.defines = self._MakeDefines()
     self.terrain = self._PrepShader('terrain.vert', 'terrain.frag')
     self.terrain_shadow = self._PrepShader('terrain.vert', 'shadow_map.frag')
+
+    self.animated_mesh = self._PrepShader('animated_mesh.vert', 'animated_mesh.frag')
+    self.animated_mesh_shadow = self._PrepShader('animated_mesh.vert', 'shadow_map.frag')
