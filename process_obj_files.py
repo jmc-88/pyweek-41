@@ -4,7 +4,10 @@ import sys
 
 files = sys.argv[1:]
 
-output_name = os.path.commonprefix([os.path.basename(f) for f in files]) + '.vbo'
+output_name = os.path.commonprefix([os.path.basename(f) for f in files])
+while output_name[-1].isdigit():
+  output_name = output_name[:-1]
+output_name += '.vbo'
 
 
 class ObjFile:
@@ -13,20 +16,7 @@ class ObjFile:
     verts = []
     vert_normals = []
     vert_texcoords = []
-
-    # Map tuple of indices (v, vn, vt) to the 'opengl' VBO index.
-    obj_index_to_gl_index = {}
-    self.vert_buffer = []
-
-    def _MapToGLIndex(v, vn, vt):
-      k = (v, vn, vt)
-      if k not in obj_index_to_gl_index:
-        obj_index_to_gl_index[k] = len(self.vert_buffer)
-        self.vert_buffer.append(numpy.concat([
-          verts[v], vert_normals[vn], vert_texcoords[vt]]))
-      return obj_index_to_gl_index[k]
-
-    self.index_buffer = []
+    faces = []
 
     with open(path, 'rt') as f:
       for line in f:
@@ -54,49 +44,76 @@ class ObjFile:
           if len(corners) != 3:
             print('Non-triangle face, not implemented.')
             sys.exit(1)
-          for f in corners:
-            v, vt, vn = [int(x) - 1 for x in f.split('/')]
-            self.index_buffer.append(_MapToGLIndex(v, vn, vt))
+          faces.append(numpy.array(
+            [[int(x) - 1 for x in corners[i].split('/')] for i in range(3)]))
+          #for f in corners:
+          #  v, vt, vn = [int(x) - 1 for x in f.split('/')]
+          #  self.index_buffer.append(_MapToGLIndex(v, vn, vt))
           continue
         print('Confused by line %r.' % line)
         sys.exit(1)
 
-    self.vert_buffer = numpy.stack(self.vert_buffer)
-    self.index_buffer = numpy.array(self.index_buffer, dtype=numpy.int32)
+    self.verts = numpy.stack(verts)
+    self.vert_normals = numpy.stack(vert_normals)
+    self.vert_texcoords = numpy.stack(vert_texcoords)
+    self.faces = numpy.stack(faces)
+
 
 objs = []
-total_indices = 0
-total_verts = 0
 
-frame_index_start = []
-start_index = 0
-start_vert = 0
-
-all_indices = []
-all_verts = []
 for index, f in enumerate(files):
   o = ObjFile(f)
   objs.append(o)
-  frame_index_start.append(start_index)
-  all_indices.append(o.index_buffer + start_vert)
-  all_verts.append(o.vert_buffer.reshape(-1))
-  start_vert += o.vert_buffer.shape[0]
-  start_index += o.index_buffer.shape[0]
-  print('frame %3i: %4i indices, %4i verts'
-        % (index, o.index_buffer.shape[0], o.vert_buffer.shape[0]))
-frame_index_start.append(start_index)
-print('%i total indices, %i total verts' % (start_index, start_vert))
+  print('Frame %3i: %4i verts, %4i faces'
+        % (index, o.verts.shape[0], o.faces.shape[0]))
 
-frame_index_start = numpy.array(frame_index_start, dtype=numpy.int32)
-all_indices = numpy.concat(all_indices)
-all_verts = numpy.concat(all_verts)
+ref_faces_without_normals = objs[0].faces[:, :, :2]
+ref_texcoords = objs[0].vert_texcoords
+for fidx, o in enumerate(objs[1:]):
+  fwn = o.faces[:, :, :2]
+  if not numpy.array_equal(ref_faces_without_normals, fwn):
+    print('Mismatch of faces-without-normals in frame %i.' % (fidx + 1))
+  if not numpy.array_equal(ref_texcoords, o.vert_texcoords):
+    print('Mismatch of texcoords in frame %i.' % (fidx + 1))
 
-assert frame_index_start.dtype == numpy.int32
-assert all_indices.dtype == numpy.int32
-assert all_verts.dtype == numpy.float32
+
+combined_verts = []
+combined_vert_map = {}
+
+faces = []
+for fidx, face in enumerate(ref_faces_without_normals):
+  combined_face = []
+  for vidx, vert in enumerate(face):
+    all_normals = tuple(o.faces[fidx, vidx, 2] for o in objs)
+    key = (vert[0], vert[1], all_normals)
+    if key not in combined_vert_map:
+      combined_vert_map[key] = len(combined_verts)
+      combined_verts.append(key)
+    combined_face.append(combined_vert_map[key])
+  faces.append(numpy.array(combined_face))
+print('%i combined vertices' % len(combined_verts))
+
+index_buffer = numpy.stack(faces).flatten().astype(numpy.int32)
+
+# For each combined vertex:
+# - 2 floats for tex coordinates (constant for all frames)
+# - 3 floats for position, per frame
+# - 3 floats for normal, per frame
+vert_buffer = numpy.zeros(len(combined_verts) * (2 + 6 * len(objs)), dtype=numpy.float32)
+tc_size = len(combined_verts) * 2
+frame_size = len(combined_verts) * 6
+for cv_idx, (v_idx, vt_idx, vn_indices) in enumerate(combined_verts):
+  vert_buffer[cv_idx * 2 + 0] = ref_texcoords[vt_idx][0]
+  vert_buffer[cv_idx * 2 + 1] = ref_texcoords[vt_idx][1]
+  for o_idx, o in enumerate(objs):
+    vert_buffer[tc_size + frame_size * o_idx + 6 * cv_idx + 0:
+                tc_size + frame_size * o_idx + 6 * cv_idx + 3] = o.verts[v_idx]
+    vert_buffer[tc_size + frame_size * o_idx + 6 * cv_idx + 3:
+                tc_size + frame_size * o_idx + 6 * cv_idx + 6] = o.vert_normals[vn_indices[o_idx]]
 
 print('Saving to %r.' % output_name)
 with open(output_name, 'wb') as f:
-  numpy.save(f, frame_index_start, allow_pickle=False)
-  numpy.save(f, all_indices, allow_pickle=False)
-  numpy.save(f, all_verts, allow_pickle=False)
+  numpy.save(f, numpy.array([len(objs)], dtype=numpy.int32), allow_pickle=False)
+  numpy.save(f, numpy.array([len(combined_verts)], dtype=numpy.int32), allow_pickle=False)
+  numpy.save(f, index_buffer, allow_pickle=False)
+  numpy.save(f, vert_buffer, allow_pickle=False)

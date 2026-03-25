@@ -174,17 +174,8 @@ class BaseTerrain:
 
     if shadow:
       GL.glUseProgram(self.shaders.terrain_shadow.id)
-      GL.glUniformMatrix4fv(
-        self.shaders.terrain_shadow.transform,
-        1, GL.GL_FALSE, render_state.shadow_transform_matrix)
     else:
       GL.glUseProgram(self.shaders.terrain.id)
-      GL.glUniformMatrix4fv(self.shaders.terrain.transform, 1, GL.GL_FALSE, render_state.transform_matrix)
-      GL.glUniformMatrix4fv(self.shaders.terrain.shadow_map_transform, 1, GL.GL_FALSE, render_state.shadow_transform_matrix)
-      GL.glUniform3f(self.shaders.terrain.sun_direction,
-                     render_state.sun_direction[0],
-                     render_state.sun_direction[1],
-                     render_state.sun_direction[2])
       GL.glActiveTexture(GL.GL_TEXTURE0)
       GL.glBindTexture(GL.GL_TEXTURE_2D, render_state.shadow_tex)
       GL.glUniform1i(self.shaders.terrain.shadow_map, 0)
@@ -254,8 +245,10 @@ def main():
   shaders = shaders_module.Shaders()
   base_terrain = BaseTerrain(shaders)
 
-  cube_with_legs = animated_mesh.AnimatedMesh('cube_with_legs00.vbo', shaders)
+  cube_with_legs = animated_mesh.AnimatedMesh('cube_with_legs.vbo', shaders)
+  #cube_with_legs = animated_mesh.AnimatedMesh('objs/city.obj.vbo', shaders)
   cube_animation_time = 0.0
+  cube_angle = 0.0
 
   render_state = RenderState()
 
@@ -281,9 +274,11 @@ def main():
     sun_angle = min(sun_angle_max, sun_angle)
     sun_angle_rad = sun_angle / 180 * math.pi
     render_state.sun_direction = numpy.array([math.cos(sun_angle_rad), 0, math.sin(sun_angle_rad)])
+    shaders.SetUniformInAllShaders('sun_direction', render_state.sun_direction)
     base_terrain.SetOffset(x)
 
-    cube_with_legs_transform = matrix.Rotate(90, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2) @ matrix.Translate(x, y - 1.5, 0.5)
+    cube_with_legs_transform = matrix.Rotate(90 + cube_angle, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2) @ matrix.Translate(x, y - 1.5, 0.5)
+    #cube_with_legs_transform = matrix.Rotate(-90 + cube_angle, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2) @ matrix.Translate(x, y - 1.5, 0.5)
 
     # Shadow map
     """
@@ -300,6 +295,8 @@ def main():
     mat = matrix.Rotate(90 - sun_angle, 0, -1, 0) @ mat
     mat = matrix.Translate(-x, -y, 0) @ mat
     render_state.shadow_transform_matrix = mat
+    shaders.SetUniformInAllShaders('world_to_clip', mat)
+    shaders.SetUniformInAllShaders('world_to_shadow', mat)
     GL.glViewport(0, 0, config.ShadowMapRes, config.ShadowMapRes)
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, shadow_map.fbo)
     GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
@@ -329,6 +326,7 @@ def main():
     mat = matrix.Rotate(-30, 1, 0, 0) @ mat
     mat = matrix.Translate(-x, 3 - y, -2) @ mat
     render_state.transform_matrix = mat
+    shaders.SetUniformInAllShaders('world_to_clip', mat)
 
     base_terrain.Render(render_state, shadow=False)
     cube_with_legs.Render(
@@ -353,21 +351,33 @@ def main():
       break
 
     pressed = pygame.key.get_pressed()
-    moving = False
+    moving = numpy.array([0, 0])
     if pressed[pygame.K_LEFT]:
-      x -= 2 * delta
-      moving = True
+      moving[0] = -1
     if pressed[pygame.K_RIGHT]:
-      x += 2 * delta
-      moving = True
+      moving[0] = +1
     if pressed[pygame.K_UP]:
-      y += 2 * delta
-      moving = True
+      moving[1] = +1
     if pressed[pygame.K_DOWN]:
-      y -= 2 * delta
-      moving = True
-    if moving:
+      moving[1] = -1
+    if numpy.any(moving):
+      x += moving[0] * 2 * delta
+      y += moving[1] * 2 * delta
       cube_animation_time += delta
+
+      target_angle = numpy.arctan2(moving[1], moving[0]) / math.pi * 180
+      if abs(cube_angle - target_angle) > abs(cube_angle + 360 - target_angle):
+        cube_angle += 360
+      elif abs(cube_angle - target_angle) > abs(cube_angle - 360 - target_angle):
+        cube_angle -= 360
+      if cube_angle < target_angle:
+        cube_angle += delta * 60
+        if cube_angle > target_angle:
+          cube_angle = target_angle
+      else:
+        cube_angle -= delta * 60
+        if cube_angle < target_angle:
+          cube_angle = target_angle
 
 
 if __name__ == '__main__':

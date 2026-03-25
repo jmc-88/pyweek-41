@@ -21,12 +21,17 @@ class Shaders:
       defines.append('#define %s %r' % (key, value))
     return '\n'.join(defines)
 
-  def _AddDefines(self, shader_src):
+  def _Preprocess(self, shader_src):
     lines = shader_src.split('\n')
     for idx in range(len(lines)):
-      if not lines[idx] or lines[idx][0] != '#':
+      if not lines[idx] or not lines[idx].startswith('#version'):
         break
     lines.insert(idx, self.defines)
+    idx += 1
+    while idx < len(lines):
+      if lines[idx] == '#include light':
+        lines[idx] = self.common_light_src
+      idx += 1
     return '\n'.join(lines)
 
   def _GetUniforms(self, shader_src):
@@ -36,8 +41,8 @@ class Shaders:
     return u
 
   def _PrepShader(self, vert_path, frag_path):
-    vert_src = self._AddDefines(open(vert_path, 'rt').read())
-    frag_src = self._AddDefines(open(frag_path, 'rt').read())
+    vert_src = self._Preprocess(open(vert_path, 'rt').read())
+    frag_src = self._Preprocess(open(frag_path, 'rt').read())
     uniforms = set(self._GetUniforms(vert_src))
     uniforms.update(self._GetUniforms(frag_src))
     program = _ProgramHolder()
@@ -46,9 +51,27 @@ class Shaders:
         shaders.compileShader(frag_src, GL.GL_FRAGMENT_SHADER))
     for u in uniforms:
       setattr(program, u, GL.glGetUniformLocation(program.id, u))
+    self.all_programs.append(program)
     return program
 
+  def SetUniformInAllShaders(self, name, value):
+    for p in self.all_programs:
+      if not hasattr(p, name):
+        continue
+      loc = getattr(p, name)
+      if value.shape == (3, ):
+        GL.glProgramUniform3f(p.id, loc, *value)
+      elif value.shape == (4, 4):
+        GL.glProgramUniformMatrix4fv(p.id, loc, 1, GL.GL_FALSE, value)
+      else:
+        assert False, ('Unimplemented uniform type: %r' % value)
+
   def __init__(self):
+    self.all_programs = []
+
+    with open('light.frag', 'rt') as f:
+      self.common_light_src = f.read()
+
     self.defines = self._MakeDefines()
     self.terrain = self._PrepShader('terrain.vert', 'terrain.frag')
     self.terrain_shadow = self._PrepShader('terrain.vert', 'shadow_map.frag')
