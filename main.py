@@ -274,6 +274,9 @@ def main():
     shaders.SetUniformInAllShaders('sun_direction', render_state.sun_direction)
     base_terrain.SetOffset(x)
 
+    cube_with_legs_frame_mix, cube_with_legs_frame0 = math.modf(cube_animation_time * 30)
+    cube_with_legs_frame0 = int(cube_with_legs_frame0) % cube_with_legs.num_frames
+    cube_with_legs_frame1 = (cube_with_legs_frame0 + 1) % cube_with_legs.num_frames
     cube_with_legs_transform = matrix.Rotate(90 + cube_angle, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2) @ matrix.Translate(x, y - 1.5, 0.5)
     #cube_with_legs_transform = matrix.Rotate(-90 + cube_angle, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2) @ matrix.Translate(x, y - 1.5, 0.5)
 
@@ -299,8 +302,8 @@ def main():
     GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
 
     base_terrain.Render(render_state, shadow=True)
-    cube_with_legs.Render(
-      int(cube_animation_time * 30) % cube_with_legs.num_frames,
+    cube_with_legs.RenderFrameMix(
+      cube_with_legs_frame0, cube_with_legs_frame1, cube_with_legs_frame_mix,
       render_state,
       cube_with_legs_transform, shadow=True)
 
@@ -326,8 +329,8 @@ def main():
     shaders.SetUniformInAllShaders('world_to_clip', mat)
 
     base_terrain.Render(render_state, shadow=False)
-    cube_with_legs.Render(
-      int(cube_animation_time * 30) % cube_with_legs.num_frames,
+    cube_with_legs.RenderFrameMix(
+      cube_with_legs_frame0, cube_with_legs_frame1, cube_with_legs_frame_mix,
       render_state,
       cube_with_legs_transform)
 

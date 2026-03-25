@@ -76,5 +76,8 @@ class Shaders:
     self.terrain = self._PrepShader('terrain.vert', 'terrain.frag')
     self.terrain_shadow = self._PrepShader('terrain.vert', 'shadow_map.frag')
 
-    self.animated_mesh = self._PrepShader('animated_mesh.vert', 'animated_mesh.frag')
+    self.animated_mesh = self._PrepShader('animated_mesh.vert', 'mesh.frag')
     self.animated_mesh_shadow = self._PrepShader('animated_mesh.vert', 'shadow_map.frag')
+
+    self.mesh = self._PrepShader('mesh.vert', 'mesh.frag')
+    self.mesh_shadow = self._PrepShader('mesh.vert', 'shadow_map.frag')
