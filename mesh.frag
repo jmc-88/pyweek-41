@@ -4,10 +4,9 @@
 
 layout(location = 0) out vec4 FragColor;
 
+flat in vec4 color;
+
 void main() {
   vec3 light_color = LightColor();
-
-  vec3 color = vec3(1, 1, 1);
-
-  FragColor = vec4(light_color * color, 1);
+  FragColor = vec4(light_color * color.rgb, 1);
 }
