@@ -91,9 +91,6 @@ class TerrainChunk:
   def __init__(self, x_offset):
     self.x_offset = x_offset
 
-    # TODO: should be possible to use a vertex shader to compute the x
-    # and y coordinates on the fly and only have to use buffers for
-    # the z values
     x, y = numpy.meshgrid(
       numpy.linspace(0, config.TerrainWidth, config.TerrainResolutionX,
                      dtype=numpy.float32),
