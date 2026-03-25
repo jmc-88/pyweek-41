@@ -8,8 +8,7 @@ from OpenGL.arrays import vbo
 class AnimatedMesh:
   def __init__(self, path, shaders):
     self.shaders = shaders
-    with open(path, 'rb') as f:
-      data = numpy.load(f, allow_pickle=False)
+    with numpy.load(path, allow_pickle=False) as data:
       self.num_frames = data['num_frames'].item()
       self.num_verts = data['num_verts'].item()
       indices = data['index_buffer']
