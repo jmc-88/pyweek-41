@@ -245,6 +245,8 @@ def main():
 
   tree_mesh = animated_mesh.AnimatedMesh('objs/Tree3.obj.vbo', shaders)
   some_trees = trees.Trees(tree_mesh, 15, [4.0, 0.0, 0.0], 1.0)
+  eat_sound = pygame.mixer.Sound('sounds/eat-long-1.flac')
+  last_eat_sound = 0.0
 
   cube_with_legs = animated_mesh.AnimatedMesh('cube_with_legs.vbo', shaders)
   #cube_with_legs = animated_mesh.AnimatedMesh('objs/city.obj.vbo', shaders)
@@ -361,7 +363,10 @@ def main():
       # TODO: check that we're actually close to some trees
       some_trees.Eat(delta * 0.3)
       # TODO: animation!
-      # TODO: sound effect!
+      # TODO: sound effect! in a less hacky way
+      if now - last_eat_sound > 1.9:
+        last_eat_sound = now
+        eat_sound.play()
     moving = numpy.array([0, 0])
     if pressed[pygame.K_LEFT]:
       moving[0] = -1
