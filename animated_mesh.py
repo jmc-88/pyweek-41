@@ -71,6 +71,7 @@ class AnimatedMesh:
     GL.glDisableVertexAttribArray(0)
     GL.glDisableVertexAttribArray(1)
     GL.glDisableVertexAttribArray(2)
+    GL.glDisableVertexAttribArray(3)
 
   def RenderFrameMix(self, frame0, frame1, mix,
                      render_state, mesh_to_world, shadow=False):
@@ -129,3 +130,56 @@ class AnimatedMesh:
     GL.glDisableVertexAttribArray(2)
     GL.glDisableVertexAttribArray(3)
     GL.glDisableVertexAttribArray(4)
+
+  def RenderInstanced(self, frame, render_state, num_instances, instance_vbo,
+                      shadow=False):
+    if shadow:
+      GL.glUseProgram(self.shaders.mesh_instanced_shadow.id)
+    else:
+      GL.glUseProgram(self.shaders.mesh_instanced.id)
+
+    # TODO: figure out why this causes segfaults
+    #GL.glBindVertexArray(self.vao)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.color_vbo)
+    GL.glVertexAttribPointer(
+      3, 4, GL.GL_UNSIGNED_BYTE, GL.GL_TRUE, 0, None)
+
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vbo)
+    # Positions and normals, stored in blocks per frame:
+    ofs = 2 * 4 * self.num_verts + frame * self.num_verts * 6 * 4
+    GL.glVertexAttribPointer(
+      0, 3, GL.GL_FLOAT, GL.GL_FALSE, 6*4,
+      ctypes.c_void_p(ofs))
+    GL.glVertexAttribPointer(
+      1, 3, GL.GL_FLOAT, GL.GL_FALSE, 6*4,
+      ctypes.c_void_p(ofs + 3 * 4))
+    # Texcoords, stored at the start of the buffer:
+    GL.glVertexAttribPointer(
+      2, 2, GL.GL_FLOAT, GL.GL_FALSE, 2*4, None)
+
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, instance_vbo)
+    for row in range(4):
+      GL.glVertexAttribPointer(
+        4 + row, 4, GL.GL_FLOAT, GL.GL_FALSE, 4*4*4, ctypes.c_void_p(16 * row))
+      GL.glVertexAttribDivisor(4 + row, 1)
+      GL.glEnableVertexAttribArray(4 + row)
+
+    GL.glEnableVertexAttribArray(0)
+    GL.glEnableVertexAttribArray(1)
+    GL.glEnableVertexAttribArray(2)
+    GL.glEnableVertexAttribArray(3)
+
+    with self.vbo_helper:
+      GL.glDrawElementsInstanced(
+        GL.GL_TRIANGLES, self.num_indices, GL.GL_UNSIGNED_INT, None,
+        num_instances)
+
+    GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, 0)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+    GL.glDisableVertexAttribArray(0)
+    GL.glDisableVertexAttribArray(1)
+    GL.glDisableVertexAttribArray(2)
+    GL.glDisableVertexAttribArray(3)
+    for row in range(4):
+      GL.glVertexAttribDivisor(4 + row, 0)
+      GL.glDisableVertexAttribArray(4 + row)

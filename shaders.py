@@ -81,3 +81,6 @@ class Shaders:
 
     self.mesh = self._PrepShader('mesh.vert', 'mesh.frag')
     self.mesh_shadow = self._PrepShader('mesh.vert', 'shadow_map.frag')
+
+    self.mesh_instanced = self._PrepShader('mesh_instanced.vert', 'mesh.frag')
+    self.mesh_instanced_shadow = self._PrepShader('mesh_instanced.vert', 'shadow_map.frag')

@@ -12,6 +12,7 @@ import config
 import matrix
 import shaders as shaders_module
 import shadows
+import trees
 
 
 ScreenWidth = 1440
@@ -242,6 +243,9 @@ def main():
   shaders = shaders_module.Shaders()
   base_terrain = BaseTerrain(shaders)
 
+  tree_mesh = animated_mesh.AnimatedMesh('objs/Tree3.obj.vbo', shaders)
+  some_trees = trees.Trees(tree_mesh, 15, [4.0, 0.0, 0.0], 1.0)
+
   cube_with_legs = animated_mesh.AnimatedMesh('cube_with_legs.vbo', shaders)
   #cube_with_legs = animated_mesh.AnimatedMesh('objs/city.obj.vbo', shaders)
   cube_animation_time = 0.0
@@ -306,6 +310,7 @@ def main():
       cube_with_legs_frame0, cube_with_legs_frame1, cube_with_legs_frame_mix,
       render_state,
       cube_with_legs_transform, shadow=True)
+    some_trees.Render(render_state, shadow=True)
 
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
 
@@ -333,6 +338,7 @@ def main():
       cube_with_legs_frame0, cube_with_legs_frame1, cube_with_legs_frame_mix,
       render_state,
       cube_with_legs_transform)
+    some_trees.Render(render_state)
 
     pygame.display.flip()
 
@@ -351,6 +357,11 @@ def main():
       break
 
     pressed = pygame.key.get_pressed()
+    if pressed[pygame.K_SPACE]:
+      # TODO: check that we're actually close to some trees
+      some_trees.Eat(delta * 0.3)
+      # TODO: animation!
+      # TODO: sound effect!
     moving = numpy.array([0, 0])
     if pressed[pygame.K_LEFT]:
       moving[0] = -1
