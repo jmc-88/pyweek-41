@@ -166,8 +166,12 @@ for cv_idx, (v_idx, vt_idx, vn_indices) in enumerate(combined_verts):
 
 print('Saving to %r.' % output_name)
 with open(output_name, 'wb') as f:
-  numpy.save(f, numpy.array([len(objs)], dtype=numpy.int32), allow_pickle=False)
-  numpy.save(f, numpy.array([len(combined_verts)], dtype=numpy.int32), allow_pickle=False)
-  numpy.save(f, index_buffer, allow_pickle=False)
-  numpy.save(f, vert_buffer, allow_pickle=False)
-  numpy.save(f, color_buffer, allow_pickle=False)
+  numpy.savez_compressed(
+    f, allow_pickle=False,
+    **{
+      'num_frames': numpy.array([len(objs)], dtype=numpy.int32),
+      'num_verts': numpy.array([len(combined_verts)], dtype=numpy.int32),
+      'index_buffer': index_buffer,
+      'vert_buffer': vert_buffer,
+      'color_buffer': color_buffer,
+    })

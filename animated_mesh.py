@@ -9,11 +9,12 @@ class AnimatedMesh:
   def __init__(self, path, shaders):
     self.shaders = shaders
     with open(path, 'rb') as f:
-      self.num_frames = numpy.load(f).item()
-      self.num_verts = numpy.load(f).item()
-      indices = numpy.load(f)
-      verts = numpy.load(f)
-      colors = numpy.load(f)
+      data = numpy.load(f, allow_pickle=False)
+      self.num_frames = data['num_frames'].item()
+      self.num_verts = data['num_verts'].item()
+      indices = data['index_buffer']
+      verts = data['vert_buffer']
+      colors = data['color_buffer']
 
     self.num_indices = indices.shape[0]
     self.vbo, self.index_vbo, self.color_vbo = GL.glGenBuffers(3)
