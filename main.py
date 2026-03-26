@@ -300,15 +300,6 @@ def main():
 
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
 
-    if False:
-      data = numpy.zeros([config.ShadowMapRes, config.ShadowMapRes], dtype=numpy.float32)
-      GL.glGetTextureImage(shadow_map.tex, 0, GL.GL_DEPTH_COMPONENT, GL.GL_FLOAT, 1024*1024*4, data)
-      data = (data * 255).astype(numpy.uint8)
-      from PIL import Image
-      im = Image.fromarray(data)
-      im.save('depth.png')
-      sys.exit(1)
-
     ## Actual rendering
     GL.glViewport(0, 0, *screen_res)
     GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
