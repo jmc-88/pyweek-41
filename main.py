@@ -125,6 +125,9 @@ class TerrainChunk:
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
     self.vbo = vbo
 
+  def get_height(self, x, y):
+    return self.z[int(x), int(y)]
+
   def __del__(self):
     if hasattr(self, 'vbo'):
       GL.glDeleteBuffers(1, [self.vbo])
@@ -156,6 +159,15 @@ class BaseTerrain:
 
     self.vao = GL.glGenVertexArrays(1)
     GL.glBindVertexArray(self.vao)
+
+  def get_height(self, x, y):
+    target_chunk = None
+    for chunk in self.chunks:
+      if chunk.x_offset <= x < chunk.x_offset + config.TerrainWidth:
+        print(f"we found {chunk.x_offset} for {x}")
+        target_chunk = chunk
+        break
+    return target_chunk.get_height(x, y)
 
   def SetOffset(self, x):
     # To debug chunk generation with just one chunk:
@@ -285,9 +297,10 @@ def main():
     but it's going to be centered on x, y roughly so just go with that for now
     x-4 to x+4, y-4 to y+4
     """
+    current_height = base_terrain.get_height(city.x, city.y)
     mat = matrix.Ortho(-4, 4, -4, 4, -10, 10)
     mat = matrix.Rotate(90 - sun_angle, 0, -1, 0) @ mat
-    mat = matrix.Translate(-city.x, -city.y, 0) @ mat
+    mat = matrix.Translate(-city.x, -city.y, current_height) @ mat
     shaders.SetUniformInAllShaders('world_to_clip', mat)
     shaders.SetUniformInAllShaders('world_to_shadow', mat)
     GL.glViewport(0, 0, config.ShadowMapRes, config.ShadowMapRes)
@@ -313,9 +326,10 @@ def main():
     GL.glViewport(0, 0, *screen_res)
     GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
 
+    current_height = base_terrain.get_height(city.x, city.y)
     mat = matrix.Frustum(-0.16, 0.16, -0.1, 0.1, 0.1, 100.0)
     mat = matrix.Rotate(-30, 1, 0, 0) @ mat
-    mat = matrix.Translate(-city.x, 1 - city.y, -2) @ mat
+    mat = matrix.Translate(-city.x, 1 - city.y, -current_height) @ mat
     shaders.SetUniformInAllShaders('world_to_clip', mat)
 
     base_terrain.Render(shadow=False)
