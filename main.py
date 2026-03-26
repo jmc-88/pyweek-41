@@ -174,9 +174,6 @@ class BaseTerrain:
       GL.glUseProgram(self.shaders.terrain_shadow.id)
     else:
       GL.glUseProgram(self.shaders.terrain.id)
-      GL.glActiveTexture(GL.GL_TEXTURE0)
-      GL.glBindTexture(GL.GL_TEXTURE_2D, render_state.shadow_tex)
-      GL.glUniform1i(self.shaders.terrain.shadow_map, 0)
 
     GL.glBindVertexArray(self.vao)
     GL.glEnableVertexAttribArray(0)
@@ -203,8 +200,6 @@ class BaseTerrain:
 class RenderState:
   sun_direction = None
   transform_matrix = None
-  shadow_transform_matrix = None
-  shadow_tex = None
 
 
 def main():
@@ -249,14 +244,16 @@ def main():
   last_eat_sound = 0.0
 
   cube_with_legs = animated_mesh.AnimatedMesh('cube_with_legs.vbo', shaders)
-  #cube_with_legs = animated_mesh.AnimatedMesh('objs/city.obj.vbo', shaders)
+  #cube_with_legs = animated_mesh.AnimatedMesh('objs/city2.obj.vbo', shaders)
   cube_animation_time = 0.0
   cube_angle = 0.0
 
   render_state = RenderState()
 
   shadow_map = shadows.ShadowMap()
-  render_state.shadow_tex = shadow_map.tex
+  GL.glActiveTexture(GL.GL_TEXTURE0)
+  GL.glBindTexture(GL.GL_TEXTURE_2D, shadow_map.tex)
+  shaders.SetUniformInAllShaders('shadow_map', 0)
 
   st = time.time()
   prev_frame = time.time()
@@ -300,7 +297,6 @@ def main():
     mat = matrix.Ortho(-4, 4, -4, 4, -10, 10)
     mat = matrix.Rotate(90 - sun_angle, 0, -1, 0) @ mat
     mat = matrix.Translate(-x, -y, 0) @ mat
-    render_state.shadow_transform_matrix = mat
     shaders.SetUniformInAllShaders('world_to_clip', mat)
     shaders.SetUniformInAllShaders('world_to_shadow', mat)
     GL.glViewport(0, 0, config.ShadowMapRes, config.ShadowMapRes)
