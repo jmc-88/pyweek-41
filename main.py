@@ -167,7 +167,7 @@ class BaseTerrain:
     if len(self.chunks) > 7:
       del self.chunks[:-7]
 
-  def Render(self, render_state, shadow=False):
+  def Render(self, shadow=False):
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.index_vbo)
 
     if shadow:
@@ -195,11 +195,6 @@ class BaseTerrain:
     GL.glDisableVertexAttribArray(0)
     GL.glDisableVertexAttribArray(1)
     GL.glUseProgram(0)
-
-
-class RenderState:
-  sun_direction = None
-  transform_matrix = None
 
 
 def main():
@@ -248,8 +243,6 @@ def main():
   cube_animation_time = 0.0
   cube_angle = 0.0
 
-  render_state = RenderState()
-
   shadow_map = shadows.ShadowMap()
   GL.glActiveTexture(GL.GL_TEXTURE0)
   GL.glBindTexture(GL.GL_TEXTURE_2D, shadow_map.tex)
@@ -273,8 +266,8 @@ def main():
     sun_angle = max(sun_angle_min, sun_angle)
     sun_angle = min(sun_angle_max, sun_angle)
     sun_angle_rad = sun_angle / 180 * math.pi
-    render_state.sun_direction = numpy.array([math.cos(sun_angle_rad), 0, math.sin(sun_angle_rad)])
-    shaders.SetUniformInAllShaders('sun_direction', render_state.sun_direction)
+    sun_direction = numpy.array([math.cos(sun_angle_rad), 0, math.sin(sun_angle_rad)])
+    shaders.SetUniformInAllShaders('sun_direction', sun_direction)
     base_terrain.SetOffset(x)
 
     cube_with_legs_frame_mix, cube_with_legs_frame0 = math.modf(cube_animation_time * 30)
@@ -303,12 +296,11 @@ def main():
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, shadow_map.fbo)
     GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
 
-    base_terrain.Render(render_state, shadow=True)
+    base_terrain.Render(shadow=True)
     cube_with_legs.RenderFrameMix(
       cube_with_legs_frame0, cube_with_legs_frame1, cube_with_legs_frame_mix,
-      render_state,
       cube_with_legs_transform, shadow=True)
-    some_trees.Render(render_state, shadow=True)
+    some_trees.Render(shadow=True)
 
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
 
@@ -328,15 +320,13 @@ def main():
     mat = matrix.Frustum(-0.16, 0.16, -0.1, 0.1, 0.1, 100.0)
     mat = matrix.Rotate(-30, 1, 0, 0) @ mat
     mat = matrix.Translate(-x, 3 - y, -2) @ mat
-    render_state.transform_matrix = mat
     shaders.SetUniformInAllShaders('world_to_clip', mat)
 
-    base_terrain.Render(render_state, shadow=False)
+    base_terrain.Render(shadow=False)
     cube_with_legs.RenderFrameMix(
       cube_with_legs_frame0, cube_with_legs_frame1, cube_with_legs_frame_mix,
-      render_state,
       cube_with_legs_transform)
-    some_trees.Render(render_state)
+    some_trees.Render()
 
     pygame.display.flip()
 

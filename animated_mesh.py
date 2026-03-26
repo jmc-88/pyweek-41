@@ -28,8 +28,7 @@ class AnimatedMesh:
     self.vbo_helper = vbo.VBO(indices, usage='GL_STATIC_DRAW', target='GL_ELEMENT_ARRAY_BUFFER')
     #self.vao = GL.glGenVertexArrays(1)
 
-  def Render(self, frame, render_state, mesh_to_world,
-             shadow=False):
+  def Render(self, frame, mesh_to_world, shadow=False):
     if shadow:
       GL.glUseProgram(self.shaders.mesh_shadow.id)
       GL.glUniformMatrix4fv(
@@ -74,7 +73,7 @@ class AnimatedMesh:
     GL.glDisableVertexAttribArray(3)
 
   def RenderFrameMix(self, frame0, frame1, mix,
-                     render_state, mesh_to_world, shadow=False):
+                     mesh_to_world, shadow=False):
     if shadow:
       GL.glUseProgram(self.shaders.animated_mesh_shadow.id)
       GL.glUniformMatrix4fv(
@@ -131,7 +130,7 @@ class AnimatedMesh:
     GL.glDisableVertexAttribArray(3)
     GL.glDisableVertexAttribArray(4)
 
-  def RenderInstanced(self, frame, render_state, num_instances, instance_vbo,
+  def RenderInstanced(self, frame, num_instances, instance_vbo,
                       shadow=False):
     if shadow:
       GL.glUseProgram(self.shaders.mesh_instanced_shadow.id)

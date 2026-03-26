@@ -40,7 +40,6 @@ class Trees:
     self.eaten += amount
     self.eaten = min(1, self.eaten)
 
-  def Render(self, render_state, shadow=False):
+  def Render(self, shadow=False):
     num = int(self.num * (1 - self.eaten))
-    self.tree_mesh.RenderInstanced(
-      0, render_state, num, self.vbo, shadow=shadow)
+    self.tree_mesh.RenderInstanced(0, num, self.vbo, shadow=shadow)
