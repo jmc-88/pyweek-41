@@ -59,7 +59,9 @@ class Shaders:
       if not hasattr(p, name):
         continue
       loc = getattr(p, name)
-      if value.shape == (3, ):
+      if isinstance(value, int):
+        GL.glProgramUniform1i(p.id, loc, value)
+      elif value.shape == (3, ):
         GL.glProgramUniform3f(p.id, loc, *value)
       elif value.shape == (4, 4):
         GL.glProgramUniformMatrix4fv(p.id, loc, 1, GL.GL_FALSE, value)
