@@ -8,6 +8,7 @@ import sys
 import time
 
 import animated_mesh
+import city as city_module
 import config
 import matrix
 import shaders as shaders_module
@@ -238,10 +239,14 @@ def main():
   eat_sound = pygame.mixer.Sound('sounds/eat-long-1.flac')
   last_eat_sound = 0.0
 
-  cube_with_legs = animated_mesh.AnimatedMesh('cube_with_legs.vbo', shaders)
-  #cube_with_legs = animated_mesh.AnimatedMesh('objs/city2.obj.vbo', shaders)
-  cube_animation_time = 0.0
-  cube_angle = 0.0
+  if True:
+    city = city_module.City(
+      animated_mesh.AnimatedMesh('cube_with_legs.vbo', shaders),
+      matrix.Rotate(90, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2))
+  else:
+    city = city_module.City(
+      animated_mesh.AnimatedMesh('objs/city2.obj.vbo', shaders),
+      matrix.Rotate(-90, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2))
 
   shadow_map = shadows.ShadowMap()
   GL.glActiveTexture(GL.GL_TEXTURE0)
@@ -250,8 +255,6 @@ def main():
 
   st = time.time()
   prev_frame = time.time()
-  x = 2.0
-  y = 0.0
   night_progress = 0.0
   while True:
     now = time.time()
@@ -259,7 +262,7 @@ def main():
     prev_frame = now
 
     night_progress += 0.5 * delta
-    distance_to_night = x - night_progress
+    distance_to_night = city.x - night_progress
     sun_angle_min = 5
     sun_angle_max = 80
     sun_angle = sun_angle_min + (distance_to_night - 0.2) / 20 * (sun_angle_max - sun_angle_min)
@@ -268,13 +271,8 @@ def main():
     sun_angle_rad = sun_angle / 180 * math.pi
     sun_direction = numpy.array([math.cos(sun_angle_rad), 0, math.sin(sun_angle_rad)])
     shaders.SetUniformInAllShaders('sun_direction', sun_direction)
-    base_terrain.SetOffset(x)
-
-    cube_with_legs_frame_mix, cube_with_legs_frame0 = math.modf(cube_animation_time * 30)
-    cube_with_legs_frame0 = int(cube_with_legs_frame0) % cube_with_legs.num_frames
-    cube_with_legs_frame1 = (cube_with_legs_frame0 + 1) % cube_with_legs.num_frames
-    cube_with_legs_transform = matrix.Rotate(90 + cube_angle, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2) @ matrix.Translate(x, y - 1.5, 0.5)
-    #cube_with_legs_transform = matrix.Rotate(-90 + cube_angle, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2) @ matrix.Translate(x, y - 1.5, 0.5)
+    base_terrain.SetOffset(city.x)
+    city.Update()
 
     # Shadow map
     """
@@ -289,7 +287,7 @@ def main():
     """
     mat = matrix.Ortho(-4, 4, -4, 4, -10, 10)
     mat = matrix.Rotate(90 - sun_angle, 0, -1, 0) @ mat
-    mat = matrix.Translate(-x, -y, 0) @ mat
+    mat = matrix.Translate(-city.x, -city.y, 0) @ mat
     shaders.SetUniformInAllShaders('world_to_clip', mat)
     shaders.SetUniformInAllShaders('world_to_shadow', mat)
     GL.glViewport(0, 0, config.ShadowMapRes, config.ShadowMapRes)
@@ -297,9 +295,7 @@ def main():
     GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
 
     base_terrain.Render(shadow=True)
-    cube_with_legs.RenderFrameMix(
-      cube_with_legs_frame0, cube_with_legs_frame1, cube_with_legs_frame_mix,
-      cube_with_legs_transform, shadow=True)
+    city.Render(shadow=True)
     some_trees.Render(shadow=True)
 
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
@@ -319,14 +315,12 @@ def main():
 
     mat = matrix.Frustum(-0.16, 0.16, -0.1, 0.1, 0.1, 100.0)
     mat = matrix.Rotate(-30, 1, 0, 0) @ mat
-    mat = matrix.Translate(-x, 3 - y, -2) @ mat
+    mat = matrix.Translate(-city.x, 1 - city.y, -2) @ mat
     shaders.SetUniformInAllShaders('world_to_clip', mat)
 
     base_terrain.Render(shadow=False)
-    cube_with_legs.RenderFrameMix(
-      cube_with_legs_frame0, cube_with_legs_frame1, cube_with_legs_frame_mix,
-      cube_with_legs_transform)
-    some_trees.Render()
+    city.Render(shadow=False)
+    some_trees.Render(shadow=False)
 
     pygame.display.flip()
 
@@ -363,23 +357,23 @@ def main():
     if pressed[pygame.K_DOWN]:
       moving[1] = -1
     if numpy.any(moving):
-      x += moving[0] * 2 * delta
-      y += moving[1] * 2 * delta
-      cube_animation_time += delta
+      city.x += moving[0] * 2 * delta
+      city.y += moving[1] * 2 * delta
+      city.animation_time += delta
 
       target_angle = numpy.arctan2(moving[1], moving[0]) / math.pi * 180
-      if abs(cube_angle - target_angle) > abs(cube_angle + 360 - target_angle):
-        cube_angle += 360
-      elif abs(cube_angle - target_angle) > abs(cube_angle - 360 - target_angle):
-        cube_angle -= 360
-      if cube_angle < target_angle:
-        cube_angle += delta * 60
-        if cube_angle > target_angle:
-          cube_angle = target_angle
+      if abs(city.angle - target_angle) > abs(city.angle + 360 - target_angle):
+        city.angle += 360
+      elif abs(city.angle - target_angle) > abs(city.angle - 360 - target_angle):
+        city.angle -= 360
+      if city.angle < target_angle:
+        city.angle += delta * 60
+        if city.angle > target_angle:
+          city.angle = target_angle
       else:
-        cube_angle -= delta * 60
-        if cube_angle < target_angle:
-          cube_angle = target_angle
+        city.angle -= delta * 60
+        if city.angle < target_angle:
+          city.angle = target_angle
 
 
 if __name__ == '__main__':
