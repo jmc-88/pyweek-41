@@ -14,6 +14,8 @@ import matrix
 import shaders as shaders_module
 import shadows
 import trees
+import world_object
+import world_resource
 
 
 ScreenWidth = 1440
@@ -130,7 +132,7 @@ class TerrainChunk:
       GL.glDeleteBuffers(1, [self.vbo])
 
 
-class BaseTerrain:
+class BaseTerrain(world_object.WorldObject):
   def __init__(self, shaders):
     self.shaders = shaders
 
@@ -198,6 +200,35 @@ class BaseTerrain:
     GL.glUseProgram(0)
 
 
+class World:
+  def __init__(self, city, terrain):
+    self.city = city
+    self.terrain = terrain
+    self.objects = [city, terrain]
+
+  def Update(self):
+    for o in self.objects:
+      o.Update()
+
+  def Render(self, shadow):
+    for o in self.objects:
+      o.Render(shadow=shadow)
+
+  def NearestResource(self, pos, max_distance):
+    nearest = None
+    nearest_dist = None
+    for o in self.objects:
+      if not isinstance(o, world_resource.WorldResource):
+        continue
+      dist = numpy.linalg.norm(pos - o.center)
+      if dist > max_distance:
+        continue
+      if not nearest or dist < nearest_dist:
+        nearest = o
+        nearest_dist = dist
+    return nearest
+
+
 def main():
   pygame.init()
 
@@ -235,8 +266,8 @@ def main():
   base_terrain = BaseTerrain(shaders)
 
   tree_mesh = animated_mesh.AnimatedMesh('objs/Tree3.obj.vbo', shaders)
-  some_trees = trees.Trees(tree_mesh, 15, [4.0, 0.0, 0.0], 1.0)
   eat_sound = pygame.mixer.Sound('sounds/eat-long-1.flac')
+  eat_fail_sound = pygame.mixer.Sound('sounds/um1.flac')
   last_eat_sound = 0.0
 
   if True:
@@ -247,6 +278,9 @@ def main():
     city = city_module.City(
       animated_mesh.AnimatedMesh('objs/city2.obj.vbo', shaders),
       matrix.Rotate(-90, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2))
+
+  world = World(city, base_terrain)
+  world.objects.append(trees.Trees(tree_mesh, 15, numpy.array([4.0, 0.0]), 1.0))
 
   shadow_map = shadows.ShadowMap()
   GL.glActiveTexture(GL.GL_TEXTURE0)
@@ -272,7 +306,7 @@ def main():
     sun_direction = numpy.array([math.cos(sun_angle_rad), 0, math.sin(sun_angle_rad)])
     shaders.SetUniformInAllShaders('sun_direction', sun_direction)
     base_terrain.SetOffset(city.x)
-    city.Update()
+    world.Update()
 
     # Shadow map
     """
@@ -294,9 +328,7 @@ def main():
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, shadow_map.fbo)
     GL.glClear(GL.GL_DEPTH_BUFFER_BIT)
 
-    base_terrain.Render(shadow=True)
-    city.Render(shadow=True)
-    some_trees.Render(shadow=True)
+    world.Render(shadow=True)
 
     GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, 0)
 
@@ -309,9 +341,7 @@ def main():
     mat = matrix.Translate(-city.x, 1 - city.y, -2) @ mat
     shaders.SetUniformInAllShaders('world_to_clip', mat)
 
-    base_terrain.Render(shadow=False)
-    city.Render(shadow=False)
-    some_trees.Render(shadow=False)
+    world.Render(shadow=False)
 
     pygame.display.flip()
 
@@ -330,14 +360,22 @@ def main():
       break
 
     pressed = pygame.key.get_pressed()
+
     if pressed[pygame.K_SPACE]:
-      # TODO: check that we're actually close to some trees
-      some_trees.Eat(delta * 0.3)
-      # TODO: animation!
-      # TODO: sound effect! in a less hacky way
-      if now - last_eat_sound > 1.9:
-        last_eat_sound = now
-        eat_sound.play()
+      nearest_resource = world.NearestResource(
+        numpy.array([city.x, city.y]), 0.8)
+      if nearest_resource:
+        nearest_resource.Eat(delta * 0.3)
+        # TODO: animation!
+        # TODO: sound effect! in a less hacky way
+        if now - last_eat_sound > 1.9:
+          last_eat_sound = now
+          eat_sound.play()
+      else:
+        if now - last_eat_sound > 1.9:
+          last_eat_sound = now
+          eat_fail_sound.play()
+
     moving = numpy.array([0, 0])
     if pressed[pygame.K_LEFT]:
       moving[0] = -1

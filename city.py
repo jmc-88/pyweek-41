@@ -1,9 +1,10 @@
 import math
 
 import matrix
+import world_object
 
 
-class City:
+class City(world_object.WorldObject):
   def __init__(self, mesh, base_transform):
     self.mesh = mesh
     self.base_transform = base_transform
