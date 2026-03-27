@@ -17,8 +17,8 @@ flat out vec4 color;
 void main() {
   vec4 pos = vec4(mesh_pos, 1);
   vec4 world_pos = mesh_to_world * pos;
+  world_pos.z += height * (pos.y * 0.5 - 0.5);
   gl_Position = world_to_clip * world_pos;
-  gl_Position.y += height * (pos.y * 0.5 - 0.5);
   shadow_map_position = (world_to_shadow * world_pos).xyz;
   normal = normalize((mesh_to_world * vec4(mesh_normal, 0)).xyz);
   color = in_color;
