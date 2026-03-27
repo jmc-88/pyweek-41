@@ -12,5 +12,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "click>=8.3.1",
     "nuitka[all]>=4.0.6",
 ]

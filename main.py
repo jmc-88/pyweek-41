@@ -270,14 +270,9 @@ def main():
   eat_fail_sound = pygame.mixer.Sound('sounds/um1.flac')
   last_eat_sound = 0.0
 
-  if True:
-    city = city_module.City(
-      animated_mesh.AnimatedMesh('cube_with_legs.vbo', shaders),
-      matrix.Rotate(90, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2))
-  else:
-    city = city_module.City(
-      animated_mesh.AnimatedMesh('objs/city2.obj.vbo', shaders),
-      matrix.Rotate(-90, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2))
+  city = city_module.City(
+    shaders,
+    matrix.Rotate(-90, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2))
 
   world = World(city, base_terrain)
   world.objects.append(trees.Trees(tree_mesh, 15, numpy.array([4.0, 0.0]), 1.0))
