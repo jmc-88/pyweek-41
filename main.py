@@ -282,7 +282,7 @@ def main():
   last_eat_sound = 0.0
 
   city = city_module.City(
-    shaders,
+    base_terrain, shaders,
     matrix.Rotate(-90, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2))
 
   world = World(city, base_terrain)

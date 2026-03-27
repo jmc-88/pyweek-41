@@ -4,7 +4,9 @@ import world_object
 
 
 class City(world_object.WorldObject):
-  def __init__(self, shaders, base_transform):
+  def __init__(self, terrain, shaders, base_transform):
+    self.terrain = terrain
+    self.shaders = shaders
     self.mesh_shell = animated_mesh.AnimatedMesh('objs/shell.vbo', shaders)
     self.mesh_head = animated_mesh.AnimatedMesh('objs/head.vbo', shaders)
     self.mesh_legs = [animated_mesh.AnimatedMesh(f'objs/leg{i+1}.vbo', shaders) for i in range(4)]
@@ -15,7 +17,8 @@ class City(world_object.WorldObject):
     self.animation_time = 0
 
   def Update(self):
-    self.transform = self.base_transform @ matrix.Rotate(self.angle, 0, 0, 1) @ matrix.Translate(self.x, self.y, 0.5)
+    current_height = self.terrain.get_height(self.x, self.y)
+    self.transform = self.base_transform @ matrix.Rotate(self.angle, 0, 0, 1) @ matrix.Translate(self.x, self.y, current_height)
 
   def Render(self, shadow):
     self.mesh_shell.Render(frame=0, mesh_to_world=self.transform, shadow=shadow)
