@@ -119,8 +119,9 @@ def main(files, filter, output_name=None):
   for index, f in enumerate(files):
     o = ObjFile(f, filter)
     objs.append(o)
-    print('Frame %3i: %4i verts, %4i faces'
-          % (index, o.verts.shape[0], o.faces.shape[0]))
+    print('Frame %3i: %4i verts, %4i faces  (%4i normals, %4i texcoords)'
+          % (index, o.verts.shape[0], o.faces.shape[0],
+             o.vert_normals.shape[0], o.vert_texcoords.shape[0]))
 
   ref_faces_without_normals = objs[0].faces[:, :, :2]
   ref_texcoords = objs[0].vert_texcoords
