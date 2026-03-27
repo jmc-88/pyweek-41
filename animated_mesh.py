@@ -28,16 +28,18 @@ class AnimatedMesh:
     self.vbo_helper = vbo.VBO(indices, usage='GL_STATIC_DRAW', target='GL_ELEMENT_ARRAY_BUFFER')
     #self.vao = GL.glGenVertexArrays(1)
 
-  def Render(self, frame, mesh_to_world, shadow=False):
+  def Render(self, frame, mesh_to_world, shadow=False, shader=None):
     if shadow:
-      GL.glUseProgram(self.shaders.mesh_shadow.id)
+      shader = shader or self.shaders.mesh_shadow
+      GL.glUseProgram(shader.id)
       GL.glUniformMatrix4fv(
-        self.shaders.mesh_shadow.mesh_to_world,
+        shader.mesh_to_world,
         1, GL.GL_FALSE, mesh_to_world)
     else:
-      GL.glUseProgram(self.shaders.mesh.id)
+      shader = shader or self.shaders.mesh
+      GL.glUseProgram(shader.id)
       GL.glUniformMatrix4fv(
-        self.shaders.mesh.mesh_to_world,
+        shader.mesh_to_world,
         1, GL.GL_FALSE, mesh_to_world)
 
     # TODO: figure out why this causes segfaults

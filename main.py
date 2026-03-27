@@ -217,9 +217,9 @@ class World:
     self.terrain = terrain
     self.objects = [city, terrain]
 
-  def Update(self):
+  def Update(self, delta):
     for o in self.objects:
-      o.Update()
+      o.Update(delta)
 
   def Render(self, shadow):
     for o in self.objects:
@@ -312,7 +312,7 @@ def main():
     sun_direction = numpy.array([math.cos(sun_angle_rad), 0, math.sin(sun_angle_rad)])
     shaders.SetUniformInAllShaders('sun_direction', sun_direction)
     base_terrain.SetOffset(city.x)
-    world.Update()
+    world.Update(delta)
 
     # Shadow map
     """
@@ -392,9 +392,7 @@ def main():
     if pressed[pygame.K_DOWN]:
       moving[1] = -1
     if numpy.any(moving):
-      city.x += moving[0] * 2 * delta
-      city.y += moving[1] * 2 * delta
-      city.animation_time += delta
+      city.walk(moving[0] * 2, moving[1] * 2, delta)
 
       target_angle = numpy.arctan2(moving[1], moving[0]) / math.pi * 180
       if abs(city.angle - target_angle) > abs(city.angle + 360 - target_angle):

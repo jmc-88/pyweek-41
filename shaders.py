@@ -81,6 +81,9 @@ class Shaders:
     self.animated_mesh = self._PrepShader('animated_mesh.vert', 'mesh.frag')
     self.animated_mesh_shadow = self._PrepShader('animated_mesh.vert', 'shadow_map.frag')
 
+    self.leg_mesh = self._PrepShader('legs.vert', 'mesh.frag')
+    self.leg_mesh_shadow = self._PrepShader('legs.vert', 'shadow_map.frag')
+
     self.mesh = self._PrepShader('mesh.vert', 'mesh.frag')
     self.mesh_shadow = self._PrepShader('mesh.vert', 'shadow_map.frag')
 
