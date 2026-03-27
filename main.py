@@ -370,8 +370,7 @@ def main():
     if pressed[pygame.K_SPACE]:
       nearest_resource = world.NearestResource(
         numpy.array([city.x, city.y]), 0.8)
-      if nearest_resource:
-        nearest_resource.Eat(delta * 0.3)
+      if nearest_resource and nearest_resource.Eat(delta * 0.3):
         # TODO: animation!
         # TODO: sound effect! in a less hacky way
         if now - last_eat_sound > 1.9:

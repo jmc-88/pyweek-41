@@ -12,7 +12,7 @@ class Trees(world_resource.WorldResource):
     self.vbo = -1
     self.tree_mesh = tree_mesh
     self.num = num
-    self.eaten = 0
+    self.eaten: float = 0.0
     angle = numpy.random.random_sample(num) * numpy.pi * 2
     r = numpy.sqrt(numpy.random.random_sample(num)) * radius
     x = r * numpy.cos(angle)
@@ -38,9 +38,11 @@ class Trees(world_resource.WorldResource):
       self.vbo = -1
 
   def Eat(self, amount):
-    self.eaten += amount
-    self.eaten = min(1, self.eaten)
+    if self.eaten == 1.0:
+      return False
+    self.eaten = min(1.0, self.eaten + amount)
+    return True
 
   def Render(self, shadow=False):
-    num = int(self.num * (1 - self.eaten))
+    num = int(self.num * (1.0 - self.eaten))
     self.tree_mesh.RenderInstanced(0, num, self.vbo, shadow=shadow)
