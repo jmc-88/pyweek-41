@@ -2,6 +2,7 @@ import math
 import numpy as np
 from OpenGL import GL
 import pygame
+import random
 import sys
 import threading
 import time
@@ -110,7 +111,9 @@ def main():
 
   pygame.mixer.init()
   sounds = {
-    'eat': pygame.mixer.Sound('sounds/eat-long-1.flac'),
+    # eat0 & eat1 names are chosen randomly with randrange
+    'eat0': pygame.mixer.Sound('sounds/eat-long-1.flac'),
+    'eat1': pygame.mixer.Sound('sounds/eat-long-2.flac'),
     'eat_fail': pygame.mixer.Sound('sounds/um1.flac'),
     'talk_intro1': pygame.mixer.Sound('sounds/talk-intro1.wav'),
     'talk_intro2': pygame.mixer.Sound('sounds/talk-intro2.wav'),
@@ -244,7 +247,7 @@ def main():
         # TODO: sound effect! in a less hacky way
         if now - last_eat_sound > 1.9:
           last_eat_sound = now
-          sounds['eat'].play()
+          sounds['eat'+str(random.randrange(2))].play()
       else:
         if now - last_eat_sound > 1.9:
           last_eat_sound = now
