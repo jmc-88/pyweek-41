@@ -326,8 +326,10 @@ def main():
 
   tree_mesh = animated_mesh.AnimatedMesh('objs/Tree3.obj.vbo', shaders)
   grain_mesh = animated_mesh.AnimatedMesh('objs/grain.vbo', shaders)
-  eat_sound = pygame.mixer.Sound('sounds/eat-long-1.flac')
-  eat_fail_sound = pygame.mixer.Sound('sounds/um1.flac')
+  sounds = {
+    'eat': pygame.mixer.Sound('sounds/eat-long-1.flac'),
+    'eat_fail': pygame.mixer.Sound('sounds/um1.flac'),
+  }
   last_eat_sound = 0.0
 
   base_terrain = BaseTerrain(shaders)
@@ -425,11 +427,11 @@ def main():
         # TODO: sound effect! in a less hacky way
         if now - last_eat_sound > 1.9:
           last_eat_sound = now
-          eat_sound.play()
+          sounds['eat'].play()
       else:
         if now - last_eat_sound > 1.9:
           last_eat_sound = now
-          eat_fail_sound.play()
+          sounds['eat_fail'].play()
 
     moving = np.array([0, 0])
     if pressed[pygame.K_LEFT]:
