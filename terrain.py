@@ -215,7 +215,17 @@ class TerrainChunk:
       world.AddResource(r)
 
   def get_height(self, x, y):
-    return self.z[int(x), int(y)]
+
+    x_shift = x - self.x_offset
+    x_idx = int((x_shift / config.TerrainWidth) * config.TerrainResolutionX)
+
+    y_shifted = y + (config.TerrainHeight / 2)
+    y_idx = int((y_shifted / config.TerrainHeight) * config.TerrainResolutionY)
+
+    x_idx = np.clip(x_idx, 0, config.TerrainResolutionX - 1)
+    y_idx = np.clip(y_idx, 0, config.TerrainResolutionY - 1)
+
+    return self.z[y_idx, x_idx]
 
   def IsMountain(self, x, y, radius):
     """x and y in chunk-local coordinates."""
