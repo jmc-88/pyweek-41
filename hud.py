@@ -1,6 +1,7 @@
 import numpy as np
 from OpenGL import GL
 import random
+import time
 
 import texture
 
@@ -51,6 +52,7 @@ class HUD:
     self.buy_upgrade_texture = texture.Texture('upgrades/buy.png')
     self.buy_cancel_texture = texture.Texture('upgrades/cancel.png')
     self.upgrade_list_open = False
+    self.earned_upgrade = False
 
     quad = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=np.float32)
     self.quad_fill_vbo = GL.glGenBuffers(1)
@@ -95,10 +97,17 @@ class HUD:
       for u in available_upgrades:
         self.textured_quads['upgrade_%s' % u] = _TexturedQuad(0.5, y, 0.45, 0.2, self.upgrade_textures[u])
         y += 0.22
-    else:
-      if 'upgrade_buy_mask' in self.colored_quads:
-        del self.colored_quads['upgrade_buy_mask']
+    elif self.earned_upgrade:
       self.textured_quads['buy_upgrade'] = _TexturedQuad(0.5, -0.95, 0.45, 0.2, self.buy_upgrade_texture)
+    else:
+      if 'buy_upgrade' in self.textured_quads:
+        del self.textured_quads['buy_upgrade']
+
+  def EarnedUpgrade(self):
+    if self.earned_upgrade:
+      return
+    self.earned_upgrade = True
+    self._UpdateUpgradeButtons()
 
   def Click(self, x, y):
     if self.upgrade_list_open:
@@ -112,6 +121,8 @@ class HUD:
           if upgrade_name == 'cannons':
             self.world.city.AddUpgrade('cranes')
             self.world.city.AddUpgrade('pipe')
+          self.earned_upgrade = False
+          self.world.next_upgrade_time = time.time() + 20.0 + 5.0 * len(self.world.city.upgrades)
           break
       self.upgrade_list_open = False
       self._UpdateUpgradeButtons()

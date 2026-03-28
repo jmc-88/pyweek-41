@@ -180,15 +180,21 @@ def main():
     t.start()
 
   hud = hud_module.HUD(shaders, world, play_sound)
+  world.next_upgrade_time = time.time() + 30.0
 
   while True:
     now = time.time()
     delta = now - prev_frame
     prev_frame = now
 
+    if now > world.next_upgrade_time:
+      hud.EarnedUpgrade()
+
     shaders.SetUniformInAllShaders("ticks", ticks)
 
-    world.night_progress += 0.5 * delta
+    world.night_progress += 0.9 * delta
+    if world.night_progress < city.x - 10:
+      world.night_progress = city.x - 10
     distance_to_night = city.x - world.night_progress
     sun_angle_min = 5
     sun_angle_max = 80
