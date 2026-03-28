@@ -214,7 +214,7 @@ class World:
   def __init__(self, city, terrain):
     self.city = city
     self.terrain = terrain
-    self.resources: dict[np.array, world_resource.WorldResource] = dict()
+    self.resources: dict[tuple[int, int], world_resource.WorldResource] = dict()
 
   def AddResource(self, res: world_resource.WorldResource):
     center = (res.center[0], res.center[1])
