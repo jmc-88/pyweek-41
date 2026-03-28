@@ -25,7 +25,7 @@ class _ColoredQuad:
 
 
 class HUD:
-  def __init__(self, shaders, world, border_width=3.0):
+  def __init__(self, shaders, world, border_width=1.0):
     self.shaders = shaders
     self.world = world
     self.border_width = border_width
