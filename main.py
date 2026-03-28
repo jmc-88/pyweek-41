@@ -162,14 +162,6 @@ def main():
           sounds[sound_name].play()
 
   done = False
-  threads = []
-  snd_intro1 = (threading.Thread(target=play_sound, kwargs={'sound':'talk_intro1', 'delay':2.0}))
-  threads.append(snd_intro1) ; snd_intro1.start()
-  snd_intro2 = (threading.Thread(target=play_sound, kwargs={'sound':'talk_intro2', 'delay':23.0}))
-  threads.append(snd_intro2) ; snd_intro2.start()
-
-  hud = hud_module.HUD(shaders, world, play_sound)
-
   ticks = 0
   def Ticker():
     nonlocal ticks
@@ -184,9 +176,10 @@ def main():
     threading.Thread(target=play_sound, kwargs={'sound':'talk_intro2', 'delay':23.0}),
     threading.Thread(target=Ticker, name="ticker", daemon=True),
   ]
-
   for t in threads:
     t.start()
+
+  hud = hud_module.HUD(shaders, world, play_sound)
 
   while True:
     now = time.time()
