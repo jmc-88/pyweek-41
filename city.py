@@ -2,17 +2,25 @@ import math
 import matrix
 import numpy as np
 from OpenGL import GL
+import time
 
 import animated_mesh
 import config
 import world_object
 
+LOW_MADNESS=0.60
+MID_MADNESS=0.70
+HI_MADNESS=0.80
+MIN_TIME_BTW_MADNESS_SOUNDS_SEC=15
 
 class City(world_object.WorldObject):
-  def __init__(self, terrain, shaders, base_transform):
+  def __init__(self, terrain, shaders, base_transform, play_sound):
     self.world = None
     self.terrain = terrain
     self.shaders = shaders
+    self.play_sound = play_sound
+    self.last_sound_played = time.monotonic()
+    self.last_sound_madness = 0.0
     self.mesh_shell = animated_mesh.AnimatedMesh('objs/shell.vbo', shaders)
     self.mesh_head = animated_mesh.AnimatedMesh('objs/head.vbo', shaders)
     self.mesh_legs = [animated_mesh.AnimatedMesh(f'objs/leg{i+1}.vbo', shaders) for i in range(4)]
@@ -107,6 +115,29 @@ class City(world_object.WorldObject):
     self.madness_level = float(max(0, min(1, self.madness_level)))
     # TODO: increase madness level when we are in the dark
     # Slowly decrease madness level while staying in the light?
+
+    def can_play_sound(level) -> bool:
+      if level > self.last_sound_madness:
+        return True
+      if (time.monotonic() - self.last_sound_played) > MIN_TIME_BTW_MADNESS_SOUNDS_SEC:
+        return True
+      return False
+    if self.madness_level < HI_MADNESS and can_play_sound(HI_MADNESS):
+      self.last_sound_played = time.monotonic()
+      self.last_sound_madness = HI_MADNESS
+      self.play_sound('mad_hi', count=3)
+    elif self.madness_level < MID_MADNESS and can_play_sound(MID_MADNESS):
+      self.last_sound_played = time.monotonic()
+      self.last_sound_madness = MID_MADNESS
+      self.play_sound('mad_mid', count=3)
+    elif self.madness_level < LOW_MADNESS and can_play_sound(LOW_MADNESS):
+      self.last_sound_played = time.monotonic()
+      self.last_sound_madness = LOW_MADNESS
+      self.play_sound('mad_low', count=3)
+    else:
+      # you're fine, for now...
+      pass
+
 
   def Render(self, shadow):
     self.mesh_shell.Render(frame=0, mesh_to_world=self.transform, shadow=shadow)

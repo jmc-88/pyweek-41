@@ -113,6 +113,9 @@ def main():
   sounds = {
     ident: pygame.mixer.Sound('sounds/' + filename)
     for ident, filename in {
+      'eat_fail': 'um1.flac',
+      'talk_intro1': 'talk-intro1.wav',
+      'talk_intro2': 'talk-intro2.wav',
       # eatX names are chosen randomly with randrange
       'eat0': 'eat-long-1.flac',
       'eat1': 'eat-long-2.flac',
@@ -120,11 +123,28 @@ def main():
       'cute0': 'cute1.flac',
       'cute1': 'cute2.flac',
       'cute2': 'cute3.flac',
-      'eat_fail': 'um1.flac',
-      'talk_intro1': 'talk-intro1.wav',
-      'talk_intro2': 'talk-intro2.wav',
+      # all the following key names are chosen randomly
+      'mad_low0': 'manic-give-in-to-the-night-1.flac',
+      'mad_low1': 'manic-give-in-to-the-night-2.flac',
+      'mad_low2': 'manic-give-in-to-the-night-3.flac',
+      'mad_mid0': 'manic-renounce-your-sanity-1.flac',
+      'mad_mid1': 'manic-renounce-your-sanity-2.flac',
+      'mad_mid2': 'manic-renounce-your-sanity-3.flac',
+      'mad_hi0': 'manic-surrender-yourselves-to-me-1.flac',
+      'mad_hi1': 'manic-surrender-yourselves-to-me-1.flac',
+      'mad_hi2': 'manic-surrender-yourselves-to-me-1.flac',
     }.items()
   }
+  def play_sound(sound: str, delay: float = 0.0001, count: int = 0):
+    slept = 0
+    while(slept < delay):
+      if QUITTING:
+        return
+      time.sleep(0.1)
+      slept+=0.1
+    if not QUITTING and not MUTE:
+        sound_name = sound + ("" if not count else str(random.randrange(count)))
+        sounds[sound_name].play()
   last_eat_sound = 0.0
 
   base_terrain = terrain.BaseTerrain(shaders)
@@ -133,7 +153,8 @@ def main():
 
   city = city_module.City(
     base_terrain, shaders,
-    matrix.Rotate(-90, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2))
+    matrix.Rotate(-90, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2),
+    play_sound=play_sound)
 
   world = World(city, base_terrain)
   base_terrain.world = world
@@ -149,19 +170,16 @@ def main():
   prev_frame = time.time()
   world.night_progress = 0.0
 
-  ## Sounds
-  def play_sound(sound: str, delay: float = 0.0001, count: int = 0):
-      slept = 0
-      while(slept < delay):
-        if QUITTING:
-          return
-        time.sleep(0.1)
-        slept+=0.1
-      if not QUITTING and not MUTE:
-          sound_name = sound + ("" if not count else str(random.randrange(count)))
-          sounds[sound_name].play()
+  ## Sound threads
+  threads = []
+  snd_intro1 = (threading.Thread(target=play_sound, kwargs={'sound':'talk_intro1', 'delay':2.0}))
+  threads.append(snd_intro1) ; snd_intro1.start()
+  snd_intro2 = (threading.Thread(target=play_sound, kwargs={'sound':'talk_intro2', 'delay':23.0}))
+  threads.append(snd_intro2) ; snd_intro2.start()
 
   done = False
+  hud = hud_module.HUD(shaders, world, play_sound)
+
   ticks = 0
   def Ticker():
     nonlocal ticks
@@ -179,7 +197,6 @@ def main():
   for t in threads:
     t.start()
 
-  hud = hud_module.HUD(shaders, world, play_sound)
   world.next_upgrade_time = time.time() + 30.0
 
   while True:
