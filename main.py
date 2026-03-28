@@ -9,6 +9,7 @@ import time
 import animated_mesh
 import city as city_module
 import config
+import grain
 import matrix
 import shaders as shaders_module
 import shadows
@@ -104,7 +105,7 @@ def GetSpacedSamples(xv, yv, n, min_dist=1.5):
 
 
 class TerrainChunk:
-  def __init__(self, world, tree_mesh, x_offset):
+  def __init__(self, world, tree_mesh, grain_mesh, x_offset):
     self.x_offset = x_offset
     self.world = world
 
@@ -117,11 +118,18 @@ class TerrainChunk:
 
     # TODO: generate some actually interesting terrain here, and pull in some data across chunks to make it nice and contiuous
     self.resources = []
-    samples = GetSpacedSamples(x, y, 5)
+
     rng = np.random.default_rng()
-    for sx, sy in samples:
+    samples = GetSpacedSamples(x, y, rng.integers(2, 8))
+    num_trees = rng.integers(len(samples))
+    for sx, sy in samples[:num_trees]:
       num = 1 + rng.integers(15)
       r = trees.Trees(tree_mesh, num, np.array([sx, sy]), num / 15)
+      self.resources.append(r)
+      world.AddResource(r)
+    for sx, sy in samples[num_trees:]:
+      num = 5 + rng.integers(15)
+      r = grain.Grain(grain_mesh, num, np.array([sx, sy]), num / 50)
       self.resources.append(r)
       world.AddResource(r)
 
@@ -161,6 +169,7 @@ class BaseTerrain(world_object.WorldObject):
   def __init__(self, shaders):
     self.world = None  # external
     self.tree_mesh = None  # external
+    self.grain_mesh = None  # external
     self.shaders = shaders
 
     row_buffer = [0, config.TerrainResolutionX]
@@ -201,9 +210,10 @@ class BaseTerrain(world_object.WorldObject):
 
     assert self.world is not None
     assert self.tree_mesh is not None
+    assert self.grain_mesh is not None
 
     while self.next_chunk * config.TerrainWidth < x + config.TerrainWidth * 3:
-      self.chunks.append(TerrainChunk(self.world, self.tree_mesh, self.next_chunk * config.TerrainWidth))
+      self.chunks.append(TerrainChunk(self.world, self.tree_mesh, self.grain_mesh, self.next_chunk * config.TerrainWidth))
       self.next_chunk += 1
     if len(self.chunks) > 7:
       for c in self.chunks[:-7]:
@@ -317,12 +327,14 @@ def main():
   shaders = shaders_module.Shaders()
 
   tree_mesh = animated_mesh.AnimatedMesh('objs/Tree3.obj.vbo', shaders)
+  grain_mesh = animated_mesh.AnimatedMesh('objs/grain.vbo', shaders)
   eat_sound = pygame.mixer.Sound('sounds/eat-long-1.flac')
   eat_fail_sound = pygame.mixer.Sound('sounds/um1.flac')
   last_eat_sound = 0.0
 
   base_terrain = BaseTerrain(shaders)
   base_terrain.tree_mesh = tree_mesh
+  base_terrain.grain_mesh = grain_mesh
 
   city = city_module.City(
     base_terrain, shaders,
