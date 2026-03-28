@@ -16,11 +16,13 @@ class Grain(world_resource.WorldResource):
     r = np.sqrt(np.random.random_sample(grain_count)) * radius
     x = r * np.cos(angle)
     y = r * np.sin(angle)
+    spin = np.random.random_sample(grain_count) * 360
 
     mats = []
     base_transform = matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(1 / 20, 1 / 20, 1 / 20)
     for idx in range(grain_count):
       m = base_transform
+      m = m @ matrix.Rotate(spin[idx], 0, 0, 1)
       # TODO: lookup terrain height and follow the terrain
       m = m @ matrix.Translate(center[0] + x[idx], center[1] + y[idx], 0)
       mats.append(m)
