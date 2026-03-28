@@ -142,10 +142,11 @@ class TerrainChunk:
     self.vbo = vbo
 
   def get_height(self, x, y):
-    x_idx = int(x / config.TerrainWidth)
+
+    x_idx = int((x - self.x_offset / config.TerrainWidth) * config.TerrainResolutionX)
 
     y_shifted = y + (config.TerrainHeight / 2)
-    y_idx = int(y_shifted / config.TerrainHeight)
+    y_idx = int((y_shifted / config.TerrainHeight) * config.TerrainResolutionY)
 
     x_idx = np.clip(x_idx, 0, config.TerrainResolutionX - 1)
     y_idx = np.clip(y_idx, 0, config.TerrainResolutionY - 1)
