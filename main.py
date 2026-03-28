@@ -3,6 +3,7 @@ import math
 import numpy as np
 from OpenGL import GL
 import pygame
+import sys
 import time
 
 import animated_mesh
@@ -105,6 +106,7 @@ def GetSpacedSamples(xv, yv, n, min_dist=1.5):
 class TerrainChunk:
   def __init__(self, world, tree_mesh, x_offset):
     self.x_offset = x_offset
+    self.world = world
 
     x, y = np.meshgrid(
       np.linspace(0, config.TerrainWidth, config.TerrainResolutionX,
@@ -114,10 +116,13 @@ class TerrainChunk:
     x = x + x_offset  # TODO: change this so each chunk uses "local" coordinates and we line things up elsewhere so we don't get creeping accuracy issues as we move far from the origin (i.e. re-center coordinates periodically)
 
     # TODO: generate some actually interesting terrain here, and pull in some data across chunks to make it nice and contiuous
+    self.resources = []
     samples = GetSpacedSamples(x, y, 5)
     rng = np.random.default_rng()
     for sx, sy in samples:
-      world.AddResource(trees.Trees(tree_mesh, 1 + rng.integers(15), np.array([sx, sy]), 1.0))
+      r = trees.Trees(tree_mesh, 1 + rng.integers(15), np.array([sx, sy]), 1.0)
+      self.resources.append(r)
+      world.AddResource(r)
 
     # Basic sine wave terrain:
     #self.z = np.sin(x * 8) * 0.05 + np.sin(y * 5) * 0.05 - 0.0
@@ -145,9 +150,10 @@ class TerrainChunk:
   def get_height(self, x, y):
     return self.z[int(x), int(y)]
 
-  def __del__(self):
-    if hasattr(self, 'vbo'):
-      GL.glDeleteBuffers(1, [self.vbo])
+  def Remove(self):
+    GL.glDeleteBuffers(1, [self.vbo])
+    for r in self.resources:
+      self.world.RemoveResource(r)
 
 
 class BaseTerrain(world_object.WorldObject):
@@ -199,6 +205,8 @@ class BaseTerrain(world_object.WorldObject):
       self.chunks.append(TerrainChunk(self.world, self.tree_mesh, self.next_chunk * config.TerrainWidth))
       self.next_chunk += 1
     if len(self.chunks) > 7:
+      for c in self.chunks[:-7]:
+        c.Remove()
       del self.chunks[:-7]
 
   def Render(self, shadow=False):
@@ -235,7 +243,7 @@ class World:
   def __init__(self, city, terrain):
     self.city = city
     self.terrain = terrain
-    self.resources: dict[tuple[int, int], world_resource.WorldResource] = dict()
+    self.resources: dict[tuple[float, float], world_resource.WorldResource] = dict()
 
   def AddResource(self, res: world_resource.WorldResource):
     center = (res.center[0], res.center[1])
@@ -445,4 +453,9 @@ def main():
 
 
 if __name__ == '__main__':
-  main()
+  try:
+    main()
+  except Exception as e:
+    import traceback
+    traceback.print_exception(sys.exception(), colorize=True)
+    sys.exit(1)
