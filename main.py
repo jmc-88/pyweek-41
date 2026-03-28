@@ -360,16 +360,11 @@ def main():
 
     # Shadow map
     """
-    Want to figure out what part of ground plane this can see:
-
-    GL.glFrustum(-0.16, 0.16, -0.1, 0.1, 0.1, 100.0)
-    GL.glRotate(-30, 1, 0, 0)
-    GL.glTranslate(-x, 3 - y, -2)
-
-    but it's going to be centered on x, y roughly so just go with that for now
-    x-4 to x+4, y-4 to y+4
+    Camera can see the ground in roughly the range:
+    x - 9.5 to x + 9.5
+    y - 2 to y + 7
     """
-    mat = matrix.Ortho(-4, 4, -4, 4, -10, 10)
+    mat = matrix.Ortho(-9.5, 9.5, -2, 7, -12, 12)
     mat = matrix.Rotate(90 - sun_angle, 0, -1, 0) @ mat
     mat = matrix.Translate(-city.x, -city.y, 0) @ mat
     shaders.SetUniformInAllShaders('world_to_clip', mat)
