@@ -80,6 +80,7 @@ def main():
     screen_res = (dpy_info.current_w, dpy_info.current_h)
 
   pygame.display.set_mode(screen_res, screen_flags)
+  pygame.display.set_caption("Spurtle City")
 
   GL.glEnable(GL.GL_PRIMITIVE_RESTART)
   GL.glPrimitiveRestartIndex(config.PrimitiveRestartIndex)
