@@ -6,7 +6,7 @@ import world_resource
 
 
 class Trees(world_resource.WorldResource):
-  def __init__(self, tree_mesh, tree_count, center, radius, height=0):
+  def __init__(self, tree_mesh, tree_count, center, radius, terrain):
     super().__init__(center)
     self.vbo = -1
     self.tree_mesh = tree_mesh
@@ -23,6 +23,7 @@ class Trees(world_resource.WorldResource):
     base_transform = matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(1 / 20, 1 / 20, 1 / 20)
     for idx in range(tree_count):
       main_scale = np.random.random() * 0.7 + 0.5
+      height = terrain.get_height(center[0] + x[idx], center[1] + y[idx])
       m = base_transform
       m = m @ matrix.Scale(*((np.random.random(3) * 0.6 + 0.7) * main_scale))
       # TODO: lookup terrain height and follow the terrain
