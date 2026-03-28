@@ -215,27 +215,39 @@ class World:
   def __init__(self, city, terrain):
     self.city = city
     self.terrain = terrain
-    self.objects = [city, terrain]
+    self.resources: dict[numpy.array, world_resource.WorldResource] = dict()
+
+  def AddResource(self, res: world_resource.WorldResource):
+    center = (res.center[0], res.center[1])
+    assert center not in self.resources
+    self.resources[center] = res
+    res.world = self
+
+  def RemoveResource(self, res: world_resource.WorldResource):
+    center = (res.center[0], res.center[1])
+    del self.resources[center]
 
   def Update(self, delta):
-    for o in self.objects:
-      o.Update(delta)
+    self.city.Update(delta)
+    self.terrain.Update(delta)
+    for _, res in self.resources.items():
+      res.Update(delta)
 
   def Render(self, shadow):
-    for o in self.objects:
-      o.Render(shadow=shadow)
+    self.city.Render(shadow)
+    self.terrain.Render(shadow)
+    for _, res in self.resources.items():
+      res.Render(shadow=shadow)
 
   def NearestResource(self, pos, max_distance):
     nearest = None
-    nearest_dist = None
-    for o in self.objects:
-      if not isinstance(o, world_resource.WorldResource):
-        continue
-      dist = numpy.linalg.norm(pos - o.center)
+    nearest_dist = math.inf
+    for _, res in self.resources.items():
+      dist = numpy.linalg.norm(pos - res.center)
       if dist > max_distance:
         continue
-      if not nearest or dist < nearest_dist:
-        nearest = o
+      if dist < nearest_dist:
+        nearest = res
         nearest_dist = dist
     return nearest
 
@@ -286,7 +298,7 @@ def main():
     matrix.Rotate(-90, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2))
 
   world = World(city, base_terrain)
-  world.objects.append(trees.Trees(tree_mesh, 15, numpy.array([4.0, 0.0]), 1.0))
+  world.AddResource(trees.Trees(tree_mesh, 15, numpy.array([4.0, 0.0]), 1.0))
 
   shadow_map = shadows.ShadowMap()
   GL.glActiveTexture(GL.GL_TEXTURE0)
@@ -370,7 +382,8 @@ def main():
     if pressed[pygame.K_SPACE]:
       nearest_resource = world.NearestResource(
         numpy.array([city.x, city.y]), 0.8)
-      if nearest_resource and nearest_resource.Eat(delta * 0.3):
+      if nearest_resource:
+        nearest_resource.Eat(delta * 0.3)
         # TODO: animation!
         # TODO: sound effect! in a less hacky way
         if now - last_eat_sound > 1.9:

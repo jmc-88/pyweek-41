@@ -39,9 +39,9 @@ class Trees(world_resource.WorldResource):
 
   def Eat(self, amount):
     if self.eaten == 1.0:
-      return False
-    self.eaten = min(1.0, self.eaten + amount)
-    return True
+      self.world.RemoveResource(self)
+    else:
+      self.eaten = min(1.0, self.eaten + amount)
 
   def Render(self, shadow=False):
     num = int(self.num * (1.0 - self.eaten))
