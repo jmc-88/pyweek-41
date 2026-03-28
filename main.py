@@ -116,6 +116,8 @@ def main():
       'eat_fail': 'um1.flac',
       'talk_intro1': 'talk-intro1.wav',
       'talk_intro2': 'talk-intro2.wav',
+      'talk_lose': 'talk-lose_condition.wav',
+      'talk_win': 'talk-win_condition.wav',
       # eatX names are chosen randomly with randrange
       'eat0': 'eat-long-1.flac',
       'eat1': 'eat-long-2.flac',
