@@ -3,6 +3,7 @@ import numpy as np
 from OpenGL import GL
 import pygame
 import sys
+import threading
 import time
 
 import animated_mesh
@@ -19,6 +20,8 @@ import world_resource
 
 ScreenWidth = 1440
 ScreenHeight = 810
+
+MUTE = False
 
 class World:
   def __init__(self, city, terrain):
@@ -101,6 +104,8 @@ def main():
   sounds = {
     'eat': pygame.mixer.Sound('sounds/eat-long-1.flac'),
     'eat_fail': pygame.mixer.Sound('sounds/um1.flac'),
+    'talk_intro1': pygame.mixer.Sound('sounds/talk-intro1.wav'),
+    'talk_intro2': pygame.mixer.Sound('sounds/talk-intro2.wav'),
   }
   last_eat_sound = 0.0
 
@@ -128,6 +133,19 @@ def main():
   st = time.time()
   prev_frame = time.time()
   night_progress = 0.0
+
+  ## Sounds
+  def play_sound(sound: str, delay: float):
+      time.sleep(delay)
+      if not MUTE:
+          sounds[sound].play()
+
+  threads = []
+  snd_intro1 = (threading.Thread(target=play_sound, kwargs={'sound':'talk_intro1', 'delay':2.0}))
+  threads.append(snd_intro1) ; snd_intro1.start()
+  snd_intro2 = (threading.Thread(target=play_sound, kwargs={'sound':'talk_intro2', 'delay':23.0}))
+  threads.append(snd_intro2) ; snd_intro2.start()
+
   while True:
     now = time.time()
     delta = now - prev_frame
@@ -223,6 +241,9 @@ def main():
       moving[1] = -1
     if np.any(moving):
       city.walk(moving, delta)
+
+  for t in threads:
+      t.join()
 
 
 if __name__ == '__main__':
