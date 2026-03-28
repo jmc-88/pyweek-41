@@ -30,7 +30,9 @@ class HUD:
     self.world = world
     self.border_width = border_width
 
-    self.placeholder = texture.Texture('placeholder.png')
+    self.tree_texture = texture.Texture('trees.png')
+    self.grain_texture = texture.Texture('grain.png')
+    self.madness_texture = texture.Texture('madness.png')
 
     quad = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=np.float32)
     self.quad_fill_vbo = GL.glGenBuffers(1)
@@ -47,13 +49,13 @@ class HUD:
     self.colored_quads = {}
     self.textured_quads = {}
 
-    self.textured_quads['tree_meter_header'] = _TexturedQuad(-0.95, -0.95, 0.2, 0.1, self.placeholder)
+    self.textured_quads['tree_meter_header'] = _TexturedQuad(-0.95, -0.95, 0.2, 0.1, self.tree_texture)
     self.colored_quads['tree_meter'] = _ColoredQuad(-0.9, -0.75, 0.1, 0.5, np.array([0.2, 0.9, 0.2, 0.9]))
 
-    self.textured_quads['grain_meter_header'] = _TexturedQuad(-0.70, -0.95, 0.2, 0.1, self.placeholder)
+    self.textured_quads['grain_meter_header'] = _TexturedQuad(-0.70, -0.95, 0.2, 0.1, self.grain_texture)
     self.colored_quads['grain_meter'] = _ColoredQuad(-0.65, -0.75, 0.1, 0.5, np.array([0.8, 0.8, 0.2, 0.9]))
 
-    self.textured_quads['madness_meter_header'] = _TexturedQuad(-0.45, -0.95, 0.2, 0.1, self.placeholder)
+    self.textured_quads['madness_meter_header'] = _TexturedQuad(-0.45, -0.95, 0.2, 0.1, self.madness_texture)
     self.colored_quads['madness_meter'] = _ColoredQuad(-0.4, -0.75, 0.1, 0.5, np.array([1.0, 0.0, 0.0, 0.9]))
 
   def Update(self):
