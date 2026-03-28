@@ -60,7 +60,7 @@ class City(world_object.WorldObject):
     self.walking = True
     self.animation_time += delta * hunger_slowdown
 
-  def Update(self, delta):
+  def Update(self, delta, height):
     self.grain = max(self.grain - delta * 0.025, 0)
     if self.walking:
       self.last_walk_time = self.time
@@ -72,7 +72,7 @@ class City(world_object.WorldObject):
     self.was_walking = self.walking
     self.walking = False
     self.time += delta
-    self.transform = self.base_transform @ matrix.Rotate(self.angle, 0, 0, 1) @ matrix.Translate(self.x, self.y, 1)
+    self.transform = self.base_transform @ matrix.Rotate(self.angle, 0, 0, 1) @ matrix.Translate(self.x, self.y, 0.4 + height)
 
   def Render(self, shadow):
     self.mesh_shell.Render(frame=0, mesh_to_world=self.transform, shadow=shadow)

@@ -142,7 +142,15 @@ class TerrainChunk:
     self.vbo = vbo
 
   def get_height(self, x, y):
-    return self.z[int(x+self.x_offset), int(y)]
+    x_idx = int(x / config.TerrainWidth)
+
+    y_shifted = y + (config.TerrainHeight / 2)
+    y_idx = int(y_shifted / config.TerrainHeight)
+
+    x_idx = np.clip(x_idx, 0, config.TerrainResolutionX - 1)
+    y_idx = np.clip(y_idx, 0, config.TerrainResolutionY - 1)
+
+    return self.z[x_idx, y_idx]
 
   def Remove(self):
     GL.glDeleteBuffers(1, [self.vbo])

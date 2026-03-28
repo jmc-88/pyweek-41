@@ -35,7 +35,8 @@ class World:
       self.resources.remove(res)
 
   def Update(self, delta):
-    self.city.Update(delta)
+    height = self.terrain.get_height(self.city.x, self.city.y)
+    self.city.Update(delta, height)
     self.terrain.Update(delta)
     for res in self.resources:
       res.Update(delta)
