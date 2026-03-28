@@ -21,10 +21,10 @@ class Trees(world_resource.WorldResource):
     base_transform = matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(1 / 20, 1 / 20, 1 / 20)
     for idx in range(tree_count):
       main_scale = np.random.random() * 0.7 + 0.5
-      m = matrix.Scale(*((np.random.random(3) * 0.6 + 0.7) * main_scale))
+      m = base_transform
+      m = m @ matrix.Scale(*((np.random.random(3) * 0.6 + 0.7) * main_scale))
       # TODO: lookup terrain height and follow the terrain
       m = m @ matrix.Translate(center[0] + x[idx], center[1] + y[idx], 0)
-      m = base_transform @ m
       mats.append(m)
     mats = np.stack(mats)
 
