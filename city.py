@@ -61,7 +61,7 @@ class City(world_object.WorldObject):
     self.animation_time += delta * hunger_slowdown
 
   def Update(self, delta):
-    self.grain -= delta * 0.025
+    self.grain = max(self.grain - delta * 0.025, 0)
     if self.walking:
       self.last_walk_time = self.time
       self.trees -= delta * 0.05
