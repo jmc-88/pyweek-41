@@ -14,6 +14,8 @@ class Trees(world_resource.WorldResource):
     self.eaten: float = 0.0
     angle = np.random.random_sample(tree_count) * np.pi * 2
     r = np.sqrt(np.random.random_sample(tree_count)) * radius
+    # Eat from the outside in.
+    r = np.sort(r)
     x = r * np.cos(angle)
     y = r * np.sin(angle)
 
