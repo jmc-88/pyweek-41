@@ -130,7 +130,6 @@ def main():
 
   hud = hud_module.HUD(shaders, world)
 
-  st = time.time()
   prev_frame = time.time()
   night_progress = 0.0
 
@@ -146,10 +145,13 @@ def main():
   snd_intro2 = (threading.Thread(target=play_sound, kwargs={'sound':'talk_intro2', 'delay':23.0}))
   threads.append(snd_intro2) ; snd_intro2.start()
 
+  ticks = 0
   while True:
     now = time.time()
     delta = now - prev_frame
     prev_frame = now
+
+    shaders.SetUniformInAllShaders("ticks", ticks)
 
     night_progress += 0.5 * delta
     distance_to_night = city.x - night_progress
@@ -198,6 +200,7 @@ def main():
     hud.Render()
 
     pygame.display.flip()
+    ticks += 1
 
     done = False
     for event in pygame.event.get():

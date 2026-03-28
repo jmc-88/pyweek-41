@@ -14,14 +14,22 @@ class _TexturedQuad:
 
 
 class _ColoredQuad:
-  def __init__(self, x, y, w, h, fill_color, border_color=np.array([1.0, 1.0, 1.0, 1.0])):
+  def __init__(self, x, y, w, h, fill_color, pulsating_color, border_color=np.array([1.0, 1.0, 1.0, 1.0]), hasReachedCriticality=None):
     self.x = x
     self.y = y
     self.w = w
     self.h = h
     self.level = h
     self.fill_color = fill_color
+    self.pulsating_color = pulsating_color
     self.border_color = border_color
+    assert hasReachedCriticality is not None
+    self.hasReachedCriticality = hasReachedCriticality
+
+  @property
+  def pulsating(self):
+    value = self.level / self.h
+    return self.hasReachedCriticality(value)
 
 
 class HUD:
@@ -50,13 +58,13 @@ class HUD:
     self.textured_quads = {}
 
     self.textured_quads['tree_meter_header'] = _TexturedQuad(-0.95, -0.95, 0.2, 0.1, self.tree_texture)
-    self.colored_quads['tree_meter'] = _ColoredQuad(-0.9, -0.75, 0.1, 0.5, np.array([0.2, 0.9, 0.2, 0.9]))
+    self.colored_quads['tree_meter'] = _ColoredQuad(-0.9, -0.75, 0.1, 0.5, np.array([0.2, 0.9, 0.2, 0.9]), np.array([1.0, 0.0, 0.0, 0.9]), hasReachedCriticality=lambda value: value <= 0.4)
 
     self.textured_quads['grain_meter_header'] = _TexturedQuad(-0.70, -0.95, 0.2, 0.1, self.grain_texture)
-    self.colored_quads['grain_meter'] = _ColoredQuad(-0.65, -0.75, 0.1, 0.5, np.array([0.8, 0.8, 0.2, 0.9]))
+    self.colored_quads['grain_meter'] = _ColoredQuad(-0.65, -0.75, 0.1, 0.5, np.array([0.8, 0.8, 0.2, 0.9]), np.array([1.0, 0.0, 0.0, 0.9]), hasReachedCriticality=lambda value: value <= 0.4)
 
     self.textured_quads['madness_meter_header'] = _TexturedQuad(-0.45, -0.95, 0.2, 0.1, self.madness_texture)
-    self.colored_quads['madness_meter'] = _ColoredQuad(-0.4, -0.75, 0.1, 0.5, np.array([1.0, 0.0, 0.0, 0.9]))
+    self.colored_quads['madness_meter'] = _ColoredQuad(-0.4, -0.75, 0.1, 0.5, np.array([1.0, 0.0, 0.0, 0.9]), np.array([1.0, 0.0, 0.0, 0.9]), hasReachedCriticality=lambda value: value >= 0.6)
 
   def Update(self):
     self.colored_quads['tree_meter'].level = self.world.city.trees * 0.5
@@ -74,6 +82,8 @@ class HUD:
     for cq in self.colored_quads.values():
       GL.glUniform4f(self.shaders.hud_colored.corners, cq.x, cq.y, cq.w, cq.level)
       GL.glUniform4f(self.shaders.hud_colored.color, *cq.fill_color)
+      GL.glUniform4f(self.shaders.hud_colored.pulsatingColor, *cq.pulsating_color)
+      GL.glUniform1i(self.shaders.hud_colored.isPulsating, cq.pulsating)
       GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
 
     GL.glEnableVertexAttribArray(0)
@@ -84,6 +94,8 @@ class HUD:
     for cq in self.colored_quads.values():
       GL.glUniform4f(self.shaders.hud_colored.corners, cq.x, cq.y, cq.w, cq.h)
       GL.glUniform4f(self.shaders.hud_colored.color, *cq.border_color)
+      GL.glUniform4f(self.shaders.hud_colored.pulsatingColor, *cq.pulsating_color)
+      GL.glUniform1i(self.shaders.hud_colored.isPulsating, False)
       GL.glDrawArrays(GL.GL_LINE_LOOP, 0, 4)
 
     GL.glEnableVertexAttribArray(0)

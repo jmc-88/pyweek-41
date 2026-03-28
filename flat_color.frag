@@ -1,9 +1,17 @@
 #version 410 core
 
-uniform vec4 color;
+out vec4 FragColor;
 
-layout(location = 0) out vec4 FragColor;
+uniform vec4 color;
+uniform vec4 pulsatingColor;
+uniform bool isPulsating;
+uniform int ticks;
 
 void main() {
-  FragColor = color;
+  if (isPulsating) {
+    float pulse = sin(ticks * 0.05);
+    FragColor = mix(color, pulsatingColor, pulse);
+  } else {
+    FragColor = color;
+  }
 }
