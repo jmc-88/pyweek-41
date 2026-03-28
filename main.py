@@ -250,11 +250,14 @@ def main():
         case pygame.Event(type=pygame.MOUSEBUTTONDOWN, button=1):
           hud.Click(event.pos[0] / screen_res[0] * 2 - 1,
                     1 - event.pos[1] / screen_res[1] * 2)
+
+    if city.lost_to_the_darkness:
+      done = True
+
     if done:
       break
 
     pressed = pygame.key.get_pressed()
-
     if pressed[pygame.K_SPACE]:
       nearest_resource = world.NearestResource(
         np.array([city.x, city.y]), 0.8)

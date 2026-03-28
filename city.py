@@ -39,6 +39,10 @@ class City(world_object.WorldObject):
     self.madness_level = 0.0
     self.gather_speed = 1.0
 
+  @property
+  def lost_to_the_darkness(self):
+    return self.trees <= 0.0 or self.grain <= 0.0 or self.madness_level >= 1.0
+
   def AddUpgrade(self, name):
     self.upgrades.add(name)
     if name == 'cannons':
