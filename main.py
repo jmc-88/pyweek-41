@@ -219,21 +219,7 @@ def main():
     if pressed[pygame.K_DOWN]:
       moving[1] = -1
     if np.any(moving):
-      city.walk(moving[0] * 2, moving[1] * 2, delta)
-
-      target_angle = np.arctan2(moving[1], moving[0]) / math.pi * 180
-      if abs(city.angle - target_angle) > abs(city.angle + 360 - target_angle):
-        city.angle += 360
-      elif abs(city.angle - target_angle) > abs(city.angle - 360 - target_angle):
-        city.angle -= 360
-      if city.angle < target_angle:
-        city.angle += delta * 60
-        if city.angle > target_angle:
-          city.angle = target_angle
-      else:
-        city.angle -= delta * 60
-        if city.angle < target_angle:
-          city.angle = target_angle
+      city.walk(moving, delta)
 
 
 if __name__ == '__main__':

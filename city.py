@@ -1,8 +1,10 @@
-import animated_mesh
 import math
 import matrix
-import world_object
+import numpy as np
 from OpenGL import GL
+
+import animated_mesh
+import world_object
 
 
 class City(world_object.WorldObject):
@@ -32,11 +34,31 @@ class City(world_object.WorldObject):
     self.trees = 1.0
     self.grain = 1.0
 
-  def walk(self, dx, dy, delta):
-    self.x += dx * delta
-    self.y += dy * delta
+  def walk(self, moving, delta):
+    target_angle = np.arctan2(moving[1], moving[0]) / math.pi * 180
+    if abs(self.angle - target_angle) > abs(self.angle + 360 - target_angle):
+      self.angle += 360
+    elif abs(self.angle - target_angle) > abs(self.angle - 360 - target_angle):
+      self.angle -= 360
+    if self.angle < target_angle:
+      self.angle += delta * 90
+      if self.angle > target_angle:
+        self.angle = target_angle
+    else:
+      self.angle -= delta * 90
+      if self.angle < target_angle:
+        self.angle = target_angle
+
+    if self.trees > 0.25:
+      hunger_slowdown = 1.0
+    else:
+      hunger_slowdown = (self.trees * 4) * 0.9 + 0.1
+    # TODO: handle speed upgrades here
+    moving = moving * 2 * hunger_slowdown * delta
+    self.x += moving[0]
+    self.y += moving[1]
     self.walking = True
-    self.animation_time += delta
+    self.animation_time += delta * hunger_slowdown
 
   def Update(self, delta):
     self.grain -= delta * 0.025
