@@ -89,8 +89,21 @@ def f_dy(v):
   return z
 
 
+def GetSpacedSamples(xv, yv, n, min_dist=1.5):
+    points = np.column_stack((xv.ravel(), yv.ravel()))
+    np.random.shuffle(points)
+
+    selected = []
+    for p in points:
+      if not selected or all(np.linalg.norm(p - s) >= min_dist for s in selected):
+        selected.append(p)
+        if len(selected) >= n:
+          break
+    return np.array(selected)
+
+
 class TerrainChunk:
-  def __init__(self, x_offset):
+  def __init__(self, world, tree_mesh, x_offset):
     self.x_offset = x_offset
 
     x, y = np.meshgrid(
@@ -101,6 +114,10 @@ class TerrainChunk:
     x = x + x_offset  # TODO: change this so each chunk uses "local" coordinates and we line things up elsewhere so we don't get creeping accuracy issues as we move far from the origin (i.e. re-center coordinates periodically)
 
     # TODO: generate some actually interesting terrain here, and pull in some data across chunks to make it nice and contiuous
+    samples = GetSpacedSamples(x, y, 5)
+    rng = np.random.default_rng()
+    for sx, sy in samples:
+      world.AddResource(trees.Trees(tree_mesh, 1 + rng.integers(15), np.array([sx, sy]), 1.0))
 
     # Basic sine wave terrain:
     #self.z = np.sin(x * 8) * 0.05 + np.sin(y * 5) * 0.05 - 0.0
@@ -135,6 +152,8 @@ class TerrainChunk:
 
 class BaseTerrain(world_object.WorldObject):
   def __init__(self, shaders):
+    self.world = None  # external
+    self.tree_mesh = None  # external
     self.shaders = shaders
 
     row_buffer = [0, config.TerrainResolutionX]
@@ -155,7 +174,6 @@ class BaseTerrain(world_object.WorldObject):
 
     self.chunks = []
     self.next_chunk = 0
-    self.SetOffset(0)
 
     self.vao = GL.glGenVertexArrays(1)
     GL.glBindVertexArray(self.vao)
@@ -173,8 +191,12 @@ class BaseTerrain(world_object.WorldObject):
     #if not self.chunks:
     #  self.chunks.append(TerrainChunk(self.next_chunk * config.TerrainWidth))
     #return
+
+    assert self.world is not None
+    assert self.tree_mesh is not None
+
     while self.next_chunk * config.TerrainWidth < x + config.TerrainWidth * 3:
-      self.chunks.append(TerrainChunk(self.next_chunk * config.TerrainWidth))
+      self.chunks.append(TerrainChunk(self.world, self.tree_mesh, self.next_chunk * config.TerrainWidth))
       self.next_chunk += 1
     if len(self.chunks) > 7:
       del self.chunks[:-7]
@@ -284,19 +306,22 @@ def main():
   GL.glPolygonMode(GL.GL_FRONT_AND_BACK, GL.GL_FILL)
 
   shaders = shaders_module.Shaders()
-  base_terrain = BaseTerrain(shaders)
 
   tree_mesh = animated_mesh.AnimatedMesh('objs/Tree3.obj.vbo', shaders)
   eat_sound = pygame.mixer.Sound('sounds/eat-long-1.flac')
   eat_fail_sound = pygame.mixer.Sound('sounds/um1.flac')
   last_eat_sound = 0.0
 
+  base_terrain = BaseTerrain(shaders)
+  base_terrain.tree_mesh = tree_mesh
+
   city = city_module.City(
     base_terrain, shaders,
     matrix.Rotate(-90, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2))
 
   world = World(city, base_terrain)
-  world.AddResource(trees.Trees(tree_mesh, 15, np.array([4.0, 0.0]), 1.0))
+  base_terrain.world = world
+  base_terrain.SetOffset(0)
 
   shadow_map = shadows.ShadowMap()
   GL.glActiveTexture(GL.GL_TEXTURE0)
