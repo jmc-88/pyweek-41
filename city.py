@@ -42,17 +42,21 @@ class City(world_object.WorldObject):
     self.upgrades.add(name)
 
   def walk(self, moving, delta):
+    if 'armor' in self.upgrades:
+      upgrade = 2
+    else:
+      upgrade = 1
     target_angle = np.arctan2(moving[1], moving[0]) / math.pi * 180
     if abs(self.angle - target_angle) > abs(self.angle + 360 - target_angle):
       self.angle += 360
     elif abs(self.angle - target_angle) > abs(self.angle - 360 - target_angle):
       self.angle -= 360
     if self.angle < target_angle:
-      self.angle += delta * 90
+      self.angle += delta * 90 * upgrade
       if self.angle > target_angle:
         self.angle = target_angle
     else:
-      self.angle -= delta * 90
+      self.angle -= delta * 90 * upgrade
       if self.angle < target_angle:
         self.angle = target_angle
 
@@ -64,7 +68,7 @@ class City(world_object.WorldObject):
     check_step = 1.5 * config.TerrainWidth / config.TerrainResolutionX
     next_mountain = self.world.terrain.IsMountain(self.x + moving[0] * check_step, self.y + moving[1] * check_step, 0.8)
 
-    moving = moving * 2 * hunger_slowdown * delta
+    moving = moving * 1.4 * hunger_slowdown * delta * upgrade
     if next_mountain > cur_mountain:
       # Slow down a lot if the player tries to move up a mountain.
       # 0.0 at 0.2, 0.9 at 0.4
