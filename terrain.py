@@ -205,12 +205,12 @@ class TerrainChunk:
     num_trees = rng.integers(len(samples))
     for sx, sy in samples[:num_trees]:
       num = 1 + rng.integers(15)
-      r = trees.Trees(tree_mesh, num, np.array([sx, sy]), num / 15)
+      r = trees.Trees(tree_mesh, num, np.array([sx, sy]), num / 15, self.get_height(sx, sy))
       self.resources.append(r)
       world.AddResource(r)
     for sx, sy in samples[num_trees:]:
       num = 5 + rng.integers(15)
-      r = grain.Grain(grain_mesh, num, np.array([sx, sy]), num / 50)
+      r = grain.Grain(grain_mesh, num, np.array([sx, sy]), num / 50, self.get_height(sx, sy))
       self.resources.append(r)
       world.AddResource(r)
 

@@ -6,7 +6,7 @@ import world_resource
 
 
 class Trees(world_resource.WorldResource):
-  def __init__(self, tree_mesh, tree_count, center, radius):
+  def __init__(self, tree_mesh, tree_count, center, radius, height=0):
     super().__init__(center)
     self.vbo = -1
     self.tree_mesh = tree_mesh
@@ -26,7 +26,7 @@ class Trees(world_resource.WorldResource):
       m = base_transform
       m = m @ matrix.Scale(*((np.random.random(3) * 0.6 + 0.7) * main_scale))
       # TODO: lookup terrain height and follow the terrain
-      m = m @ matrix.Translate(center[0] + x[idx], center[1] + y[idx], 0)
+      m = m @ matrix.Translate(center[0] + x[idx], center[1] + y[idx], height)
       mats.append(m)
     mats = np.stack(mats)
 

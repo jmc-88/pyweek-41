@@ -6,7 +6,7 @@ import world_resource
 
 
 class Grain(world_resource.WorldResource):
-  def __init__(self, grain_mesh, grain_count, center, radius):
+  def __init__(self, grain_mesh, grain_count, center, radius, height=0):
     super().__init__(center)
     self.vbo = -1
     self.grain_mesh = grain_mesh
@@ -26,7 +26,7 @@ class Grain(world_resource.WorldResource):
       m = base_transform
       m = m @ matrix.Rotate(spin[idx], 0, 0, 1)
       # TODO: lookup terrain height and follow the terrain
-      m = m @ matrix.Translate(center[0] + x[idx], center[1] + y[idx], 0)
+      m = m @ matrix.Translate(center[0] + x[idx], center[1] + y[idx], height)
       mats.append(m)
     mats = np.stack(mats)
 
