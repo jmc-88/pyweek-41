@@ -122,15 +122,15 @@ class City(world_object.WorldObject):
       if (time.monotonic() - self.last_sound_played) > MIN_TIME_BTW_MADNESS_SOUNDS_SEC:
         return True
       return False
-    if self.madness_level < HI_MADNESS and can_play_sound(HI_MADNESS):
+    if self.madness_level > HI_MADNESS and can_play_sound(HI_MADNESS):
       self.last_sound_played = time.monotonic()
       self.last_sound_madness = HI_MADNESS
       self.play_sound('mad_hi', count=3)
-    elif self.madness_level < MID_MADNESS and can_play_sound(MID_MADNESS):
+    elif self.madness_level > MID_MADNESS and can_play_sound(MID_MADNESS):
       self.last_sound_played = time.monotonic()
       self.last_sound_madness = MID_MADNESS
       self.play_sound('mad_mid', count=3)
-    elif self.madness_level < LOW_MADNESS and can_play_sound(LOW_MADNESS):
+    elif self.madness_level > LOW_MADNESS and can_play_sound(LOW_MADNESS):
       self.last_sound_played = time.monotonic()
       self.last_sound_madness = LOW_MADNESS
       self.play_sound('mad_low', count=3)
