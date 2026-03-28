@@ -155,13 +155,25 @@ def main():
       if not QUITTING and not MUTE:
           sounds[sound].play()
 
-  threads = []
-  snd_intro1 = (threading.Thread(target=play_sound, kwargs={'sound':'talk_intro1', 'delay':2.0}))
-  threads.append(snd_intro1) ; snd_intro1.start()
-  snd_intro2 = (threading.Thread(target=play_sound, kwargs={'sound':'talk_intro2', 'delay':23.0}))
-  threads.append(snd_intro2) ; snd_intro2.start()
-
+  done = False
   ticks = 0
+  def Ticker():
+    nonlocal ticks
+    nonlocal done
+
+    while not done:
+      time.sleep(0.1)
+      ticks += 1
+
+  threads = [
+    threading.Thread(target=play_sound, kwargs={'sound':'talk_intro1', 'delay':2.0}),
+    threading.Thread(target=play_sound, kwargs={'sound':'talk_intro2', 'delay':23.0}),
+    threading.Thread(target=Ticker, name="ticker", daemon=True),
+  ]
+
+  for t in threads:
+    t.start()
+
   while True:
     now = time.time()
     delta = now - prev_frame
@@ -216,9 +228,7 @@ def main():
     hud.Render()
 
     pygame.display.flip()
-    ticks += 1
 
-    done = False
     for event in pygame.event.get():
       match event:
         case (

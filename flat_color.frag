@@ -9,7 +9,7 @@ uniform int ticks;
 
 void main() {
   if (isPulsating) {
-    float pulse = sin(ticks * 0.05);
+    float pulse = sin(ticks / 3.0);
     FragColor = mix(color, pulsatingColor, pulse);
   } else {
     FragColor = color;
