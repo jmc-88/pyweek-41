@@ -84,6 +84,9 @@ class HUD:
       GL.glUniform4f(self.shaders.hud_colored.color, *cq.border_color)
       GL.glDrawArrays(GL.GL_LINE_LOOP, 0, 4)
 
+    GL.glEnableVertexAttribArray(0)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.quad_fill_vbo)
+    GL.glVertexAttribPointer(0, 2, GL.GL_FLOAT, GL.GL_FALSE, 8, None)
     GL.glUseProgram(self.shaders.hud_textured.id)
     GL.glActiveTexture(GL.GL_TEXTURE0)
     GL.glUniform1i(self.shaders.hud_textured.tex, 0)
