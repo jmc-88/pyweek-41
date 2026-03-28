@@ -227,6 +227,9 @@ def main():
         case pygame.Event(type=pygame.KEYDOWN, key=pygame.K_f):
           pygame.display.toggle_fullscreen()
           screen_res = pygame.display.get_window_size()
+        case pygame.Event(type=pygame.MOUSEBUTTONDOWN, button=1):
+          hud.Click(event.pos[0] / screen_res[0] * 2 - 1,
+                    1 - event.pos[1] / screen_res[1] * 2)
     if done:
       break
 

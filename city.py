@@ -22,6 +22,7 @@ class City(world_object.WorldObject):
     self.mesh_head_upgrades = {
       name: animated_mesh.AnimatedMesh(f'objs/{name}.vbo', shaders)
       for name in ['radar']}
+    self.all_upgrades = set(self.mesh_shell_upgrades) | set(self.mesh_head_upgrades)
     self.upgrades = set()
     self.base_transform = base_transform
     self.x = 5.0
@@ -36,6 +37,9 @@ class City(world_object.WorldObject):
     self.trees = 1.0
     self.grain = 1.0
     self.madness_level = 0.0
+
+  def AddUpgrade(self, name):
+    self.upgrades.add(name)
 
   def walk(self, moving, delta):
     target_angle = np.arctan2(moving[1], moving[0]) / math.pi * 180
