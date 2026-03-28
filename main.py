@@ -254,34 +254,32 @@ class World:
   def __init__(self, city, terrain):
     self.city = city
     self.terrain = terrain
-    self.resources: dict[tuple[float, float], world_resource.WorldResource] = dict()
+    self.resources: list[world_resource.WorldResource] = []
 
   def AddResource(self, res: world_resource.WorldResource):
-    center = (res.center[0], res.center[1])
-    assert center not in self.resources
-    self.resources[center] = res
+    self.resources.append(res)
     res.world = self
 
   def RemoveResource(self, res: world_resource.WorldResource):
-    center = (res.center[0], res.center[1])
-    del self.resources[center]
+    if res in self.resources:
+      self.resources.remove(res)
 
   def Update(self, delta):
     self.city.Update(delta)
     self.terrain.Update(delta)
-    for _, res in self.resources.items():
+    for res in self.resources:
       res.Update(delta)
 
   def Render(self, shadow):
     self.city.Render(shadow)
     self.terrain.Render(shadow)
-    for _, res in self.resources.items():
+    for res in self.resources:
       res.Render(shadow=shadow)
 
   def NearestResource(self, pos, max_distance):
     nearest = None
     nearest_dist = math.inf
-    for _, res in self.resources.items():
+    for res in self.resources:
       dist = np.linalg.norm(pos - res.center)
       if dist > max_distance:
         continue
