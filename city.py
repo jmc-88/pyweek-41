@@ -90,7 +90,7 @@ class City(world_object.WorldObject):
     self.was_walking = self.walking
     self.walking = False
     self.time += delta
-    self.transform = self.base_transform @ matrix.Rotate(self.angle, 0, 0, 1) @ matrix.Translate(self.x, self.y, 0.4 + height)
+    self.transform = self.base_transform @ matrix.Rotate(self.angle, 0, 0, 1) @ matrix.Translate(self.x, self.y, 0.25 + height)
 
     # TODO: increase madness level when we are in the dark
     # Slowly decrease madness level while staying in the light?
