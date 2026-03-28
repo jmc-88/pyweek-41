@@ -171,6 +171,7 @@ def main():
 
   prev_frame = time.time()
   world.night_progress = 0.0
+  world.victory = False
 
   done = False
   exit_now = False
@@ -334,7 +335,7 @@ def main():
     if np.any(moving):
       city.walk(moving, delta)
 
-  if not exit_now:
+  if not exit_now and not world.victory:
     done = False
     play_sound('talk_lose')
     while True:

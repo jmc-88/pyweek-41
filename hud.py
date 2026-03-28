@@ -170,8 +170,13 @@ class HUD(EmptyHUD):
           if not name.startswith('upgrade_'):
             break
           upgrade_name = name[len('upgrade_'):]
-          self.play_sound('cute', count=3)
           self.world.city.AddUpgrade(upgrade_name)
+          available_upgrades = set(self.upgrades) - self.world.city.upgrades
+          if available_upgrades:
+            self.play_sound('cute', count=3)
+          else:
+            self.play_sound('talk_win')
+            self.world.victory = True
           if upgrade_name == 'cannons':
             self.world.city.AddUpgrade('cranes')
             self.world.city.AddUpgrade('pipe')
