@@ -39,10 +39,14 @@ class HUD:
     self.textured_quads = {}
 
     self.textured_quads['tree_meter_header'] = _TexturedQuad(-0.95, -0.95, 0.2, 0.1, self.placeholder)
-    self.colored_quads['tree_meter'] = _ColoredQuad(-0.9, -0.75, 0.1, 0.5, np.array([0.2, 0.9, 0.2, 0.8]))
+    self.colored_quads['tree_meter'] = _ColoredQuad(-0.9, -0.75, 0.1, 0.5, np.array([0.2, 0.9, 0.2, 0.9]))
+
+    self.textured_quads['grain_meter_header'] = _TexturedQuad(-0.70, -0.95, 0.2, 0.1, self.placeholder)
+    self.colored_quads['grain_meter'] = _ColoredQuad(-0.65, -0.75, 0.1, 0.5, np.array([0.8, 0.8, 0.2, 0.9]))
 
   def Update(self):
     self.colored_quads['tree_meter'].h = self.world.city.trees * 0.5
+    self.colored_quads['grain_meter'].h = self.world.city.grain * 0.5
 
   def Render(self):
     GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)

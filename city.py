@@ -30,6 +30,7 @@ class City(world_object.WorldObject):
     self.walking = False
     self.was_walking = False
     self.trees = 1.0
+    self.grain = 1.0
 
   def walk(self, dx, dy, delta):
     self.x += dx * delta
@@ -38,6 +39,7 @@ class City(world_object.WorldObject):
     self.animation_time += delta
 
   def Update(self, delta):
+    self.grain -= delta * 0.025
     if self.walking:
       self.last_walk_time = self.time
       self.trees -= delta * 0.05

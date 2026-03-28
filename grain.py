@@ -41,6 +41,8 @@ class Grain(world_resource.WorldResource):
       self.world.RemoveResource(self)
     else:
       self.eaten = min(1.0, self.eaten + amount)
+      self.world.city.grain += amount
+      self.world.city.grain = min(1, self.world.city.grain)
 
   def Render(self, shadow=False):
     num = int(self.grain_count * (1.0 - self.eaten))
