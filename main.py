@@ -120,7 +120,8 @@ class TerrainChunk:
     samples = GetSpacedSamples(x, y, 5)
     rng = np.random.default_rng()
     for sx, sy in samples:
-      r = trees.Trees(tree_mesh, 1 + rng.integers(15), np.array([sx, sy]), 1.0)
+      num = 1 + rng.integers(15)
+      r = trees.Trees(tree_mesh, num, np.array([sx, sy]), num / 15)
       self.resources.append(r)
       world.AddResource(r)
 
