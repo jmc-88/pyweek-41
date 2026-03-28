@@ -4,11 +4,13 @@ import numpy as np
 from OpenGL import GL
 
 import animated_mesh
+import config
 import world_object
 
 
 class City(world_object.WorldObject):
   def __init__(self, terrain, shaders, base_transform):
+    self.world = None
     self.terrain = terrain
     self.shaders = shaders
     self.mesh_shell = animated_mesh.AnimatedMesh('objs/shell.vbo', shaders)
@@ -54,8 +56,15 @@ class City(world_object.WorldObject):
       hunger_slowdown = 1.0
     else:
       hunger_slowdown = (self.trees * 4) * 0.85 + 0.15
-    # TODO: handle speed upgrades here
+    cur_mountain = self.world.terrain.IsMountain(self.x, self.y, 0.8)
+    check_step = 1.5 * config.TerrainWidth / config.TerrainResolutionX
+    next_mountain = self.world.terrain.IsMountain(self.x + moving[0] * check_step, self.y + moving[1] * check_step, 0.8)
+
     moving = moving * 2 * hunger_slowdown * delta
+    if next_mountain > cur_mountain:
+      # Slow down a lot if the player tries to move up a mountain.
+      # 0.0 at 0.2, 0.9 at 0.4
+      moving *= max(min(1 - (cur_mountain - 0.2) / 0.1, 0.9), 0)
     self.x += moving[0]
     self.y += moving[1]
     self.walking = True

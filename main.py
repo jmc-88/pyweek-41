@@ -113,6 +113,7 @@ def main():
 
   world = World(city, base_terrain)
   base_terrain.world = world
+  city.world = world
   base_terrain.SetOffset(0)
 
   shadow_map = shadows.ShadowMap()

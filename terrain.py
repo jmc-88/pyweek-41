@@ -214,9 +214,24 @@ class TerrainChunk:
       self.resources.append(r)
       world.AddResource(r)
 
-
   def get_height(self, x, y):
     return self.z[int(x), int(y)]
+
+  def IsMountain(self, x, y, radius):
+    """x and y in chunk-local coordinates."""
+    hx = int(x / config.TerrainWidth * config.TerrainResolutionX)
+    hy = int((y + config.TerrainHeight / 2) / config.TerrainHeight * config.TerrainResolutionY)
+    hx = max(0, min(config.TerrainResolutionX - 1, hx))
+    hy = max(0, min(config.TerrainResolutionY - 1, hy))
+    # TODO: this does the wrong thing if the coordinates are far from the map
+    radius = int(radius / config.TerrainWidth * config.TerrainResolutionX)
+    x0 = max(hx - radius, 0)
+    y0 = max(hy - radius, 0)
+    x1 = min(hx + radius, config.TerrainResolutionX - 1)
+    y1 = min(hy + radius, config.TerrainResolutionY - 1)
+    l = self.mountain[y0:y1, x0:x1]
+    num = np.sum(l)
+    return num / (y1 - y0) / (x1 - x0)
 
   def Remove(self):
     GL.glDeleteBuffers(1, [self.vbo])
@@ -253,13 +268,24 @@ class BaseTerrain(world_object.WorldObject):
     self.vao = GL.glGenVertexArrays(1)
     GL.glBindVertexArray(self.vao)
 
-  def get_height(self, x, y):
-    target_chunk = None
+  def _ChunkForPosition(self, x, y):
+    # TODO: chunks are in order and width is fixed, could calculate index directly instead of searching
     for chunk in self.chunks:
       if chunk.x_offset <= x < chunk.x_offset + config.TerrainWidth:
-        target_chunk = chunk
-        break
+        return chunk
+    return None
+
+  def get_height(self, x, y):
+    target_chunk = self._ChunkForPosition(x, y)
+    if not target_chunk:
+      return 0
     return target_chunk.get_height(x, y)
+
+  def IsMountain(self, x, y, radius):
+    chunk = self._ChunkForPosition(x, y)
+    if not chunk:
+      return 0
+    return chunk.IsMountain(x - chunk.x_offset, y, radius)
 
   def SetOffset(self, x):
     # To debug chunk generation with just one chunk:
@@ -274,6 +300,8 @@ class BaseTerrain(world_object.WorldObject):
     while self.next_chunk * config.TerrainWidth < x + config.TerrainWidth * 3:
       self.chunks.append(TerrainChunk(self.world, self.tree_mesh, self.grain_mesh, self.next_chunk * config.TerrainWidth))
       self.next_chunk += 1
+
+    # TODO: should remove chunks only when they fall to the night, so player can backtrack to the edge if night even if they move far ahead
     if len(self.chunks) > 7:
       for c in self.chunks[:-7]:
         c.Remove()
