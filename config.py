@@ -1,4 +1,8 @@
 Fullscreen = False
+# Warning: Some code kinda assumes that the the world coordinate
+# resolution is the same in both dimensions (i.e. TerrainWidth /
+# TerrainResolutionX == TerrainHeight / TerrainResolutionY), wonky
+# things might happen if this isn't true.
 TerrainResolutionX = 64
 TerrainResolutionY = 64 * 4
 TerrainWidth = 4.0  # Width of one terrain chunk in world coordinates.
