@@ -291,6 +291,7 @@ def main():
             | pygame.Event(type=pygame.KEYDOWN, key=pygame.K_ESCAPE)
         ):
           dprint("Got QUIT or <esc>")
+          exit_now = True
           done = True
         case pygame.Event(type=pygame.KEYDOWN, key=pygame.K_f):
           pygame.display.toggle_fullscreen()
@@ -332,6 +333,35 @@ def main():
       moving[1] = -1
     if np.any(moving):
       city.walk(moving, delta)
+
+  if not exit_now:
+    done = False
+    play_sound('talk_lose')
+    while True:
+      GL.glViewport(0, 0, *screen_res)
+      GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+      splash_screen.Render()
+
+      pygame.display.flip()
+
+      for event in pygame.event.get():
+        match event:
+          case (
+              pygame.Event(type=pygame.QUIT)
+              | pygame.Event(type=pygame.KEYDOWN, key=pygame.K_ESCAPE)
+          ):
+            done = True
+            exit_now = True
+          case pygame.Event(type=pygame.KEYDOWN, key=pygame.K_f):
+            pygame.display.toggle_fullscreen()
+            screen_res = pygame.display.get_window_size()
+          case pygame.Event(type=pygame.KEYDOWN):
+            done = True
+      if done:
+        break
+
+  if exit_now:
+    sys.exit(1)
 
   global QUITTING
   QUITTING=True
