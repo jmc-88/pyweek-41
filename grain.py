@@ -41,13 +41,14 @@ class Grain(world_resource.WorldResource):
       self.vbo = -1
 
   def Harvest(self, amount):
-    if self.eaten == 1.0:
+    self.eaten += amount * 5
+    if self.eaten >= self.grain_count:
       self.world.RemoveResource(self)
     else:
-      self.eaten = min(1.0, self.eaten + amount)
-      self.world.city.grain += amount
+      self.world.city.grain += amount * 0.35
       self.world.city.grain = min(1, self.world.city.grain)
 
   def Render(self, shadow=False):
-    num = int(self.grain_count * (1.0 - self.eaten))
-    self.grain_mesh.RenderInstanced(0, num, self.vbo, shadow=shadow)
+    num = int(self.grain_count - self.eaten)
+    if num > 0:
+      self.grain_mesh.RenderInstanced(0, num, self.vbo, shadow=shadow)

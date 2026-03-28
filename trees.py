@@ -41,13 +41,14 @@ class Trees(world_resource.WorldResource):
       self.vbo = -1
 
   def Harvest(self, amount):
-    if self.eaten == 1.0:
+    self.eaten += amount * 5
+    if self.eaten >= self.tree_count:
       self.world.RemoveResource(self)
     else:
-      self.eaten = min(1.0, self.eaten + amount)
-      self.world.city.trees += amount
+      self.world.city.trees += amount * 0.35
       self.world.city.trees = min(1, self.world.city.trees)
 
   def Render(self, shadow=False):
-    num = int(self.tree_count * (1.0 - self.eaten))
-    self.tree_mesh.RenderInstanced(0, num, self.vbo, shadow=shadow)
+    num = int(self.tree_count - self.eaten)
+    if num > 0:
+      self.tree_mesh.RenderInstanced(0, num, self.vbo, shadow=shadow)
