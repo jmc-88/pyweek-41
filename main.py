@@ -22,6 +22,12 @@ ScreenWidth = 1440
 ScreenHeight = 810
 
 MUTE = False
+DEBUG = True
+QUITTING = False
+
+def dprint(*args, **kwargs):
+  if DEBUG:
+    print(*args, **kwargs)
 
 class World:
   def __init__(self, city, terrain):
@@ -101,6 +107,8 @@ def main():
 
   tree_mesh = animated_mesh.AnimatedMesh('objs/Tree3.obj.vbo', shaders)
   grain_mesh = animated_mesh.AnimatedMesh('objs/grain.vbo', shaders)
+
+  pygame.mixer.init()
   sounds = {
     'eat': pygame.mixer.Sound('sounds/eat-long-1.flac'),
     'eat_fail': pygame.mixer.Sound('sounds/um1.flac'),
@@ -135,8 +143,13 @@ def main():
 
   ## Sounds
   def play_sound(sound: str, delay: float):
-      time.sleep(delay)
-      if not MUTE:
+      slept = 0
+      while(slept < delay):
+        if QUITTING:
+          return
+        time.sleep(0.1)
+        slept+=0.1
+      if not QUITTING and not MUTE:
           sounds[sound].play()
 
   threads = []
@@ -209,6 +222,7 @@ def main():
             pygame.Event(type=pygame.QUIT)
             | pygame.Event(type=pygame.KEYDOWN, key=pygame.K_ESCAPE)
         ):
+          dprint("Got QUIT or <esc>")
           done = True
         case pygame.Event(type=pygame.KEYDOWN, key=pygame.K_f):
           pygame.display.toggle_fullscreen()
@@ -245,8 +259,17 @@ def main():
     if np.any(moving):
       city.walk(moving, delta)
 
+  global QUITTING
+  QUITTING=True
+  dprint("Out of game loop")
+  pygame.mixer.stop()
+  pygame.mixer.quit()
+  dprint("Sound mixer quit'ed. Joining threads...")
   for t in threads:
-      t.join()
+    t.join()
+  dprint("Threads join'd")
+  pygame.quit()
+
 
 
 if __name__ == '__main__':
