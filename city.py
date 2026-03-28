@@ -37,21 +37,26 @@ class City(world_object.WorldObject):
     self.was_walking = self.walking
     self.walking = False
     self.time += delta
-    self.transform = self.base_transform @ matrix.Rotate(self.angle, 0, 0, 1) @ matrix.Translate(self.x, self.y, 0)
+    self.transform = self.base_transform @ matrix.Rotate(self.angle, 0, 0, 1) @ matrix.Translate(self.x, self.y, 1)
 
   def Render(self, shadow):
     self.mesh_shell.Render(frame=0, mesh_to_world=self.transform, shadow=shadow)
-    self.mesh_head.Render(frame=0, mesh_to_world=self.transform, shadow=shadow)
     shader = self.shaders.leg_mesh_shadow if shadow else self.shaders.leg_mesh
     GL.glUseProgram(shader.id)
+    GL.glUniform1f(shader.left, 0)
     time_since_stopped = self.time - self.last_stop_time
     time_since_walked = self.time - self.last_walk_time
     ground = 0 # self.terrain.GetHeight(self.x, self.y)
+    if self.was_walking:
+      walk_factor = min(1, time_since_stopped * 10)
+    else:
+      walk_factor = max(0, 1 - time_since_walked * 10)
+    # Legs stepping.
     for i, leg in enumerate(self.mesh_legs):
-      lift = math.sin(self.animation_time * 10 + i * math.pi * 0.5)*0.2
-      if self.was_walking:
-        lift *= min(1, time_since_stopped * 10)
-      else:
-        lift *= max(0, 1 - time_since_walked * 10)
-      GL.glUniform1f(shader.height, ground + lift)
+      lift = 0.4 * math.sin(self.animation_time * 10 + i * math.pi * 0.5) * walk_factor
+      GL.glUniform1f(shader.up, -ground - lift)
       leg.Render(frame=0, mesh_to_world=self.transform, shader=shader)
+    # Head bopping.
+    GL.glUniform1f(shader.up, -0.2*math.sin(self.animation_time * 10) * walk_factor * 0.5)
+    GL.glUniform1f(shader.left, math.sin(self.animation_time * 5) * walk_factor * 0.5)
+    self.mesh_head.Render(frame=0, mesh_to_world=self.transform, shader=shader)
