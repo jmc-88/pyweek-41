@@ -89,7 +89,74 @@ def GetSpacedSamples(xv, yv, n, min_dist=1.5):
     return np.array(selected)
 
 
+MountainSize = 20
+MountainAngles = 20
+
+
+class MountainPrecalc:
+  def __init__(self):
+    x, y = np.meshgrid(
+      np.arange(MountainSize * 2) - MountainSize + 0.5,
+      np.arange(MountainSize * 2) - MountainSize + 0.5)
+    p = np.stack([x, y], -1)
+    self.radius = np.linalg.norm(p, axis=-1)
+    p = p.reshape(-1, 2)
+    angle = np.arctan2(p[:, 0], p[:, 1]).reshape(MountainSize * 2, MountainSize * 2)
+    angle = angle * MountainAngles / 2 / np.pi
+    angle = np.mod(angle, MountainAngles)
+    self.angle_mix, self.angle0 = np.modf(angle)
+    self.angle0 = self.angle0.astype(int)
+    self.angle1 = (self.angle0 + 1) % MountainAngles
+
+mountain_precalc = MountainPrecalc()
+
 class TerrainChunk:
+
+  def _AddMountain(self):
+    x = np.random.random_sample()
+    y = np.random.random_sample()
+
+    hx = int(x * config.TerrainResolutionX)
+    hy = int(y * config.TerrainResolutionY)
+    # Push away from edge:
+    if hx < MountainSize:
+      hx = MountainSize
+    if hx >= config.TerrainResolutionX - MountainSize:
+      hx = config.TerrainResolutionX - MountainSize
+    if hy < MountainSize:
+      hy = MountainSize
+    if hy >= config.TerrainResolutionY - MountainSize:
+      hy = config.TerrainResolutionY - MountainSize
+
+    if np.any(self.mountain[hy-MountainSize:hy+MountainSize, hx-MountainSize:hx+MountainSize]):
+      # TODO: try again and pick a different spot?
+      return
+
+    radius = (np.random.random_sample(MountainAngles) * 0.4 + 0.5) * MountainSize
+    k = np.full(3, 1/3)
+    radius = np.convolve(radius, k, mode='same')
+
+    ra0 = radius[mountain_precalc.angle0]
+    ra1 = radius[mountain_precalc.angle1]
+    ra = ra0 * (1 - mountain_precalc.angle_mix) + ra1 * mountain_precalc.angle_mix
+    t = np.maximum(0, (ra - mountain_precalc.radius) / ra)
+    self.mountain[hy-MountainSize:hy+MountainSize, hx-MountainSize:hx+MountainSize] = t > 0.1
+
+    t = 1 - (t - 1) * (t - 1)
+
+    self.z[hy-MountainSize:hy+MountainSize, hx-MountainSize:hx+MountainSize] = self.z[hy-MountainSize:hy+MountainSize, hx-MountainSize:hx+MountainSize] * (1 - t) + 1 * t
+
+    local_z = self.z[hy-MountainSize:hy+MountainSize, hx-MountainSize:hx+MountainSize]
+    dx = (local_z[:, 1:] - local_z[:, :-1]) / (config.TerrainWidth / config.TerrainResolutionX)
+    dx = 0.5 * (dx[:, 1:] + dx[:, :-1])
+
+    dy = (local_z[1:, :] - local_z[:-1, :]) / (config.TerrainHeight / config.TerrainResolutionY)
+    dy = 0.5 * (dy[1:, :] + dy[:-1, :])
+
+    local_normals = np.stack(
+      [-dx[1:-1, :], -dy[:, 1:-1], np.ones_like(dx[1:-1, :])], -1)
+    self.normals[hy-MountainSize + 1:hy+MountainSize - 1, hx-MountainSize + 1:hx+MountainSize - 1] = local_normals
+
   def __init__(self, world, tree_mesh, grain_mesh, x_offset):
     self.x_offset = x_offset
     self.world = world
@@ -102,9 +169,38 @@ class TerrainChunk:
     x = x + x_offset  # TODO: change this so each chunk uses "local" coordinates and we line things up elsewhere so we don't get creeping accuracy issues as we move far from the origin (i.e. re-center coordinates periodically)
 
     # TODO: generate some actually interesting terrain here, and pull in some data across chunks to make it nice and contiuous
-    self.resources = []
 
+    # Basic sine wave terrain:
+    #self.z = np.sin(x * 8) * 0.05 + np.sin(y * 5) * 0.05 - 0.0
+    #normals = np.stack([-np.cos(x * 8) * 8 * 0.05, -np.cos(y * 5) * 5 * 0.05, np.ones_like(x)], -1)
+
+    p = np.stack([x, y], -1)
+    M = np.array([[4/5, -3/5], [3/5, 4/5]])
+    self.z = f(p) * 0.2
+    # More high-freq variation, but need some work to compute the normals for this one:
+    #M = np.array([[4/5, -3/5], [3/5, 4/5]])
+    #self.z = f(p) * 0.2 + f(2 * p @ M) * 0.1
+    self.z = self.z.astype(np.float32)
+    self.normals = np.stack(
+      [-f_dx(p) * 0.2, -f_dy(p) * 0.2, np.ones_like(x)], -1)
+    self.normals = self.normals.astype(np.float32)
+
+    # Add some very tall and impassable mountains.
+    self.mountain = np.full_like(self.z, False)
+    self._AddMountain()
+
+    self.normals = self.normals / np.linalg.norm(self.normals, axis=2, keepdims=True)
+    data = np.concat([self.z.reshape(-1, 1), self.normals.reshape(-1, 3)], -1)
+
+    vbo = GL.glGenBuffers(1)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vbo)
+    GL.glBufferData(GL.GL_ARRAY_BUFFER, data.flatten(), GL.GL_STATIC_DRAW)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+    self.vbo = vbo
+
+    self.resources = []
     rng = np.random.default_rng()
+    # TODO: only use positions where the ground is not mountain
     samples = GetSpacedSamples(x, y, rng.integers(2, 8))
     num_trees = rng.integers(len(samples))
     for sx, sy in samples[:num_trees]:
@@ -118,28 +214,6 @@ class TerrainChunk:
       self.resources.append(r)
       world.AddResource(r)
 
-    # Basic sine wave terrain:
-    #self.z = np.sin(x * 8) * 0.05 + np.sin(y * 5) * 0.05 - 0.0
-    #normals = np.stack([-np.cos(x * 8) * 8 * 0.05, -np.cos(y * 5) * 5 * 0.05, np.ones_like(x)], -1)
-
-    p = np.stack([x, y], -1)
-    M = np.array([[4/5, -3/5], [3/5, 4/5]])
-    self.z = f(p) * 0.2
-    # More high-freq variation, but need some work to compute the normals for this one:
-    #M = np.array([[4/5, -3/5], [3/5, 4/5]])
-    #self.z = f(p) * 0.2 + f(2 * p @ M) * 0.1
-    self.z = self.z.astype(np.float32)
-    normals = np.stack([-f_dx(p) * 0.2, -f_dy(p) * 0.2, np.ones_like(x)], -1)
-    normals = normals.astype(np.float32)
-
-    normals = normals / np.linalg.norm(normals, axis=2, keepdims=True)
-    data = np.concat([self.z.reshape(-1, 1), normals.reshape(-1, 3)], -1)
-
-    vbo = GL.glGenBuffers(1)
-    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vbo)
-    GL.glBufferData(GL.GL_ARRAY_BUFFER, data.flatten(), GL.GL_STATIC_DRAW)
-    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-    self.vbo = vbo
 
   def get_height(self, x, y):
     return self.z[int(x), int(y)]
