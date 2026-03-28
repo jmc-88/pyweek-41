@@ -178,8 +178,38 @@ def main():
   threads.append(snd_intro2) ; snd_intro2.start()
 
   done = False
-  hud = hud_module.HUD(shaders, world, play_sound)
+  exit_now = False
 
+  # Slash screen!
+  splash_screen = hud_module.SplashScreenHUD(shaders)
+  while True:
+    GL.glViewport(0, 0, *screen_res)
+    GL.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT)
+    splash_screen.Render()
+
+    pygame.display.flip()
+
+    for event in pygame.event.get():
+      match event:
+        case (
+            pygame.Event(type=pygame.QUIT)
+            | pygame.Event(type=pygame.KEYDOWN, key=pygame.K_ESCAPE)
+        ):
+          done = True
+          exit_now = True
+        case pygame.Event(type=pygame.KEYDOWN, key=pygame.K_f):
+          pygame.display.toggle_fullscreen()
+          screen_res = pygame.display.get_window_size()
+        case pygame.Event(type=pygame.KEYDOWN):
+          done = True
+    if done:
+      break
+
+  if exit_now:
+    sys.exit(1)
+  done = False
+
+  hud = hud_module.HUD(shaders, world, play_sound)
   ticks = 0
   def Ticker():
     nonlocal ticks

@@ -34,25 +34,12 @@ class _ColoredQuad:
     return self.hasReachedCriticality(value)
 
 
-class HUD:
-  def __init__(self, shaders, world, play_sound, border_width=1.0):
+class EmptyHUD:
+  def __init__(self, shaders):
     self.shaders = shaders
-    self.world = world
-    self.play_sound = play_sound
-    self.border_width = border_width
-
-    self.tree_texture = texture.Texture('trees.png')
-    self.grain_texture = texture.Texture('grain.png')
-    self.madness_texture = texture.Texture('madness.png')
-    self.space_to_gather = texture.Texture('space_to_gather.png')
-
-    self.upgrades = ['cannons', 'armor', 'turret', 'radar']
-    self.upgrade_textures = {name: texture.Texture('upgrades/%s.png' % name)
-                             for name in self.upgrades}
-    self.buy_upgrade_texture = texture.Texture('upgrades/buy.png')
-    self.buy_cancel_texture = texture.Texture('upgrades/cancel.png')
-    self.upgrade_list_open = False
-    self.earned_upgrade = False
+    self.colored_quads = {}
+    self.textured_quads = {}
+    self.border_width = 1
 
     quad = np.array([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=np.float32)
     self.quad_fill_vbo = GL.glGenBuffers(1)
@@ -66,8 +53,70 @@ class HUD:
 
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
 
-    self.colored_quads = {}
-    self.textured_quads = {}
+  def Render(self):
+    GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
+    GL.glEnable(GL.GL_BLEND)
+    GL.glDisable(GL.GL_DEPTH_TEST)
+
+    GL.glEnableVertexAttribArray(0)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.quad_fill_vbo)
+    GL.glVertexAttribPointer(0, 2, GL.GL_FLOAT, GL.GL_FALSE, 8, None)
+    GL.glUseProgram(self.shaders.hud_colored.id)
+    for cq in self.colored_quads.values():
+      GL.glUniform4f(self.shaders.hud_colored.corners, cq.x, cq.y, cq.w, cq.level)
+      GL.glUniform4f(self.shaders.hud_colored.color, *cq.fill_color)
+      GL.glUniform4f(self.shaders.hud_colored.pulsatingColor, *cq.pulsating_color)
+      GL.glUniform1i(self.shaders.hud_colored.isPulsating, cq.pulsating)
+      GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
+
+    GL.glEnableVertexAttribArray(0)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.quad_border_vbo)
+    GL.glVertexAttribPointer(0, 2, GL.GL_FLOAT, GL.GL_FALSE, 8, None)
+    GL.glLineWidth(self.border_width)
+    GL.glUseProgram(self.shaders.hud_colored.id)
+    for cq in self.colored_quads.values():
+      GL.glUniform4f(self.shaders.hud_colored.corners, cq.x, cq.y, cq.w, cq.h)
+      GL.glUniform4f(self.shaders.hud_colored.color, *cq.border_color)
+      GL.glUniform4f(self.shaders.hud_colored.pulsatingColor, *cq.pulsating_color)
+      GL.glUniform1i(self.shaders.hud_colored.isPulsating, False)
+      GL.glDrawArrays(GL.GL_LINE_LOOP, 0, 4)
+
+    GL.glEnableVertexAttribArray(0)
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.quad_fill_vbo)
+    GL.glVertexAttribPointer(0, 2, GL.GL_FLOAT, GL.GL_FALSE, 8, None)
+    GL.glUseProgram(self.shaders.hud_textured.id)
+    GL.glActiveTexture(GL.GL_TEXTURE0)
+    GL.glUniform1i(self.shaders.hud_textured.tex, 0)
+    for tq in self.textured_quads.values():
+      GL.glBindTexture(GL.GL_TEXTURE_2D, tq.tex.id)
+      GL.glUniform4f(self.shaders.hud_textured.corners, tq.x, tq.y, tq.w, tq.h)
+      GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
+
+    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
+    GL.glDisableVertexAttribArray(0)
+    GL.glUseProgram(0)
+    GL.glDisable(GL.GL_BLEND)
+    GL.glEnable(GL.GL_DEPTH_TEST)
+
+
+class HUD(EmptyHUD):
+  def __init__(self, shaders, world, play_sound):
+    super().__init__(shaders)
+    self.world = world
+    self.play_sound = play_sound
+
+    self.tree_texture = texture.Texture('trees.png')
+    self.grain_texture = texture.Texture('grain.png')
+    self.madness_texture = texture.Texture('madness.png')
+    self.space_to_gather = texture.Texture('space_to_gather.png')
+
+    self.upgrades = ['cannons', 'armor', 'turret', 'radar']
+    self.upgrade_textures = {name: texture.Texture('upgrades/%s.png' % name)
+                             for name in self.upgrades}
+    self.buy_upgrade_texture = texture.Texture('upgrades/buy.png')
+    self.buy_cancel_texture = texture.Texture('upgrades/cancel.png')
+    self.upgrade_list_open = False
+    self.earned_upgrade = False
 
     self.textured_quads['space_to_gather'] = _TexturedQuad(-0.3, -0.95, 0.5, 0.2, self.space_to_gather)
 
@@ -137,47 +186,9 @@ class HUD:
     self.colored_quads['grain_meter'].level = self.world.city.grain * 0.5
     self.colored_quads['madness_meter'].level = self.world.city.madness_level * 0.5
 
-  def Render(self):
-    GL.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA)
-    GL.glEnable(GL.GL_BLEND)
-    GL.glDisable(GL.GL_DEPTH_TEST)
 
-    GL.glEnableVertexAttribArray(0)
-    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.quad_fill_vbo)
-    GL.glVertexAttribPointer(0, 2, GL.GL_FLOAT, GL.GL_FALSE, 8, None)
-    GL.glUseProgram(self.shaders.hud_colored.id)
-    for cq in self.colored_quads.values():
-      GL.glUniform4f(self.shaders.hud_colored.corners, cq.x, cq.y, cq.w, cq.level)
-      GL.glUniform4f(self.shaders.hud_colored.color, *cq.fill_color)
-      GL.glUniform4f(self.shaders.hud_colored.pulsatingColor, *cq.pulsating_color)
-      GL.glUniform1i(self.shaders.hud_colored.isPulsating, cq.pulsating)
-      GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
-
-    GL.glEnableVertexAttribArray(0)
-    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.quad_border_vbo)
-    GL.glVertexAttribPointer(0, 2, GL.GL_FLOAT, GL.GL_FALSE, 8, None)
-    GL.glLineWidth(self.border_width)
-    GL.glUseProgram(self.shaders.hud_colored.id)
-    for cq in self.colored_quads.values():
-      GL.glUniform4f(self.shaders.hud_colored.corners, cq.x, cq.y, cq.w, cq.h)
-      GL.glUniform4f(self.shaders.hud_colored.color, *cq.border_color)
-      GL.glUniform4f(self.shaders.hud_colored.pulsatingColor, *cq.pulsating_color)
-      GL.glUniform1i(self.shaders.hud_colored.isPulsating, False)
-      GL.glDrawArrays(GL.GL_LINE_LOOP, 0, 4)
-
-    GL.glEnableVertexAttribArray(0)
-    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.quad_fill_vbo)
-    GL.glVertexAttribPointer(0, 2, GL.GL_FLOAT, GL.GL_FALSE, 8, None)
-    GL.glUseProgram(self.shaders.hud_textured.id)
-    GL.glActiveTexture(GL.GL_TEXTURE0)
-    GL.glUniform1i(self.shaders.hud_textured.tex, 0)
-    for tq in self.textured_quads.values():
-      GL.glBindTexture(GL.GL_TEXTURE_2D, tq.tex.id)
-      GL.glUniform4f(self.shaders.hud_textured.corners, tq.x, tq.y, tq.w, tq.h)
-      GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
-
-    GL.glBindBuffer(GL.GL_ARRAY_BUFFER, 0)
-    GL.glDisableVertexAttribArray(0)
-    GL.glUseProgram(0)
-    GL.glDisable(GL.GL_BLEND)
-    GL.glEnable(GL.GL_DEPTH_TEST)
+class SplashScreenHUD(EmptyHUD):
+  def __init__(self, shaders):
+    super().__init__(shaders)
+    self.splash_screen = texture.Texture('artwork/Splashscreen.png')
+    self.textured_quads['splash'] = _TexturedQuad(-1, -1, 2, 2, self.splash_screen)
