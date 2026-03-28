@@ -1,5 +1,4 @@
 import numpy as np
-import OpenGL
 from OpenGL import GL
 
 import matrix

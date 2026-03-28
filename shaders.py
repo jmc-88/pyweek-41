@@ -1,4 +1,3 @@
-import OpenGL
 from OpenGL import GL
 from OpenGL.GL import shaders
 import re

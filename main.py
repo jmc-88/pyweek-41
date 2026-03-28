@@ -1,7 +1,6 @@
 import ctypes
 import math
 import numpy as np
-import OpenGL
 from OpenGL import GL
 import pygame
 import time

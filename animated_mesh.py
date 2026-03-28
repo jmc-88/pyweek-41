@@ -1,6 +1,5 @@
 import ctypes
 import numpy as np
-import OpenGL
 from OpenGL import GL
 from OpenGL.arrays import vbo
 
