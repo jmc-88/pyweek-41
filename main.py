@@ -170,13 +170,6 @@ def main():
   prev_frame = time.time()
   world.night_progress = 0.0
 
-  ## Sound threads
-  threads = []
-  snd_intro1 = (threading.Thread(target=play_sound, kwargs={'sound':'talk_intro1', 'delay':2.0}))
-  threads.append(snd_intro1) ; snd_intro1.start()
-  snd_intro2 = (threading.Thread(target=play_sound, kwargs={'sound':'talk_intro2', 'delay':23.0}))
-  threads.append(snd_intro2) ; snd_intro2.start()
-
   done = False
   exit_now = False
 
