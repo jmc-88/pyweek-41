@@ -138,9 +138,14 @@ class HUD(EmptyHUD):
     for name in remove:
       del self.textured_quads[name]
 
+    available_upgrades = set(self.upgrades) - self.world.city.upgrades
+    if not available_upgrades:
+      if 'buy_upgrade' in self.textured_quads:
+        del self.textured_quads['buy_upgrade']
+      return
+
     if self.upgrade_list_open:
       self.textured_quads['buy_upgrade'] = _TexturedQuad(0.5, -0.95, 0.45, 0.2, self.buy_cancel_texture)
-      available_upgrades = set(self.upgrades) - self.world.city.upgrades
       available_upgrades = sorted(available_upgrades)
       y = -0.95 + 0.25
       for u in available_upgrades:
