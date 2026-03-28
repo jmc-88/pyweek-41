@@ -25,7 +25,7 @@ class City(world_object.WorldObject):
     self.all_upgrades = set(self.mesh_shell_upgrades) | set(self.mesh_head_upgrades)
     self.upgrades = set()
     self.base_transform = base_transform
-    self.x = 5.0
+    self.x = 10.0
     self.y = 0.0
     self.angle = 0
     self.time = 0
@@ -92,6 +92,12 @@ class City(world_object.WorldObject):
     self.time += delta
     self.transform = self.base_transform @ matrix.Rotate(self.angle, 0, 0, 1) @ matrix.Translate(self.x, self.y, 0.25 + height)
 
+    near_night = max(0, min(1, 1 - (self.x - self.world.night_progress) / 8))
+    if near_night > 0:
+      self.madness_level += 0.1 * near_night * delta
+    else:
+      self.madness_level -= 0.1 * delta
+    self.madness_level = float(max(0, min(1, self.madness_level)))
     # TODO: increase madness level when we are in the dark
     # Slowly decrease madness level while staying in the light?
 

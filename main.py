@@ -142,7 +142,7 @@ def main():
   hud = hud_module.HUD(shaders, world)
 
   prev_frame = time.time()
-  night_progress = 0.0
+  world.night_progress = 0.0
 
   ## Sounds
   def play_sound(sound: str, delay: float):
@@ -181,8 +181,8 @@ def main():
 
     shaders.SetUniformInAllShaders("ticks", ticks)
 
-    night_progress += 0.5 * delta
-    distance_to_night = city.x - night_progress
+    world.night_progress += 0.5 * delta
+    distance_to_night = city.x - world.night_progress
     sun_angle_min = 5
     sun_angle_max = 80
     sun_angle = sun_angle_min + (distance_to_night - 0.2) / 20 * (sun_angle_max - sun_angle_min)
