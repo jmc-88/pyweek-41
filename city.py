@@ -12,6 +12,13 @@ class City(world_object.WorldObject):
     self.mesh_shell = animated_mesh.AnimatedMesh('objs/shell.vbo', shaders)
     self.mesh_head = animated_mesh.AnimatedMesh('objs/head.vbo', shaders)
     self.mesh_legs = [animated_mesh.AnimatedMesh(f'objs/leg{i+1}.vbo', shaders) for i in range(4)]
+    self.mesh_shell_upgrades = {
+      name: animated_mesh.AnimatedMesh(f'objs/{name}.vbo', shaders)
+      for name in ['cannons', 'armor', 'cranes', 'pipe', 'turret']}
+    self.mesh_head_upgrades = {
+      name: animated_mesh.AnimatedMesh(f'objs/{name}.vbo', shaders)
+      for name in ['radar']}
+    self.upgrades = set()
     self.base_transform = base_transform
     self.x = 5.0
     self.y = 0.0
@@ -41,6 +48,9 @@ class City(world_object.WorldObject):
 
   def Render(self, shadow):
     self.mesh_shell.Render(frame=0, mesh_to_world=self.transform, shadow=shadow)
+    for name, mesh in self.mesh_shell_upgrades.items():
+      if name in self.upgrades:
+        mesh.Render(frame=0, mesh_to_world=self.transform, shadow=shadow)
     shader = self.shaders.leg_mesh_shadow if shadow else self.shaders.leg_mesh
     GL.glUseProgram(shader.id)
     GL.glUniform1f(shader.left, 0)
@@ -60,3 +70,6 @@ class City(world_object.WorldObject):
     GL.glUniform1f(shader.up, -0.2*math.sin(self.animation_time * 10) * walk_factor * 0.5)
     GL.glUniform1f(shader.left, math.sin(self.animation_time * 5) * walk_factor * 0.5)
     self.mesh_head.Render(frame=0, mesh_to_world=self.transform, shader=shader)
+    for name, mesh in self.mesh_head_upgrades.items():
+      if name in self.upgrades:
+        mesh.Render(frame=0, mesh_to_world=self.transform, shader=shader)
