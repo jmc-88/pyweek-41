@@ -50,10 +50,10 @@ class City(world_object.WorldObject):
       if self.angle < target_angle:
         self.angle = target_angle
 
-    if self.trees > 0.25:
+    if self.trees > 0.3:
       hunger_slowdown = 1.0
     else:
-      hunger_slowdown = (self.trees * 4) * 0.9 + 0.1
+      hunger_slowdown = (self.trees * 4) * 0.85 + 0.15
     # TODO: handle speed upgrades here
     moving = moving * 2 * hunger_slowdown * delta
     self.x += moving[0]
