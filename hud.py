@@ -1,5 +1,6 @@
 import numpy as np
 from OpenGL import GL
+import random
 
 import texture
 
@@ -33,9 +34,10 @@ class _ColoredQuad:
 
 
 class HUD:
-  def __init__(self, shaders, world, border_width=1.0):
+  def __init__(self, shaders, world, play_sound, border_width=1.0):
     self.shaders = shaders
     self.world = world
+    self.play_sound = play_sound
     self.border_width = border_width
 
     self.tree_texture = texture.Texture('trees.png')
@@ -102,6 +104,7 @@ class HUD:
           if not name.startswith('upgrade_'):
             break
           upgrade_name = name[len('upgrade_'):]
+          self.play_sound('cute', count=3)
           self.world.city.AddUpgrade(upgrade_name)
           break
       self.upgrade_list_open = False

@@ -111,12 +111,19 @@ def main():
 
   pygame.mixer.init()
   sounds = {
-    # eat0 & eat1 names are chosen randomly with randrange
-    'eat0': pygame.mixer.Sound('sounds/eat-long-1.flac'),
-    'eat1': pygame.mixer.Sound('sounds/eat-long-2.flac'),
-    'eat_fail': pygame.mixer.Sound('sounds/um1.flac'),
-    'talk_intro1': pygame.mixer.Sound('sounds/talk-intro1.wav'),
-    'talk_intro2': pygame.mixer.Sound('sounds/talk-intro2.wav'),
+    ident: pygame.mixer.Sound('sounds/' + filename)
+    for ident, filename in {
+      # eatX names are chosen randomly with randrange
+      'eat0': 'eat-long-1.flac',
+      'eat1': 'eat-long-2.flac',
+      # cuteX names are chosen randomly with randrange
+      'cute0': 'cute1.flac',
+      'cute1': 'cute2.flac',
+      'cute2': 'cute3.flac',
+      'eat_fail': 'um1.flac',
+      'talk_intro1': 'talk-intro1.wav',
+      'talk_intro2': 'talk-intro2.wav',
+    }.items()
   }
   last_eat_sound = 0.0
 
@@ -139,13 +146,11 @@ def main():
   GL.glBindTexture(GL.GL_TEXTURE_2D, shadow_map.tex)
   shaders.SetUniformInAllShaders('shadow_map', 5)
 
-  hud = hud_module.HUD(shaders, world)
-
   prev_frame = time.time()
   world.night_progress = 0.0
 
   ## Sounds
-  def play_sound(sound: str, delay: float):
+  def play_sound(sound: str, delay: float = 0.0001, count: int = 0):
       slept = 0
       while(slept < delay):
         if QUITTING:
@@ -153,9 +158,18 @@ def main():
         time.sleep(0.1)
         slept+=0.1
       if not QUITTING and not MUTE:
-          sounds[sound].play()
+          sound_name = sound + ("" if not count else str(random.randrange(count)))
+          sounds[sound_name].play()
 
   done = False
+  threads = []
+  snd_intro1 = (threading.Thread(target=play_sound, kwargs={'sound':'talk_intro1', 'delay':2.0}))
+  threads.append(snd_intro1) ; snd_intro1.start()
+  snd_intro2 = (threading.Thread(target=play_sound, kwargs={'sound':'talk_intro2', 'delay':23.0}))
+  threads.append(snd_intro2) ; snd_intro2.start()
+
+  hud = hud_module.HUD(shaders, world, play_sound)
+
   ticks = 0
   def Ticker():
     nonlocal ticks
@@ -257,11 +271,11 @@ def main():
         # TODO: sound effect! in a less hacky way
         if now - last_eat_sound > 1.9:
           last_eat_sound = now
-          sounds['eat'+str(random.randrange(2))].play()
+          play_sound('eat', count=2)
       else:
         if now - last_eat_sound > 1.9:
           last_eat_sound = now
-          sounds['eat_fail'].play()
+          play_sound('eat_fail')
 
     moving = np.array([0, 0])
     if pressed[pygame.K_LEFT]:
