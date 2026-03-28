@@ -37,7 +37,7 @@ class Trees(world_resource.WorldResource):
       GL.glDeleteBuffers(1, [self.vbo])
       self.vbo = -1
 
-  def Eat(self, amount):
+  def Harvest(self, amount):
     if self.eaten == 1.0:
       self.world.RemoveResource(self)
     else:
