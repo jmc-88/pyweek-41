@@ -92,7 +92,7 @@ class City(world_object.WorldObject):
     self.time += delta
     self.transform = self.base_transform @ matrix.Rotate(self.angle, 0, 0, 1) @ matrix.Translate(self.x, self.y, 0.25 + height)
 
-    near_night = max(0, min(1, 1 - (self.x - self.world.night_progress) / 8))
+    near_night = max(0, min(1, 1 - (self.x - self.world.night_progress) / 5))
     if near_night > 0:
       self.madness_level += 0.1 * near_night * delta
     else:
