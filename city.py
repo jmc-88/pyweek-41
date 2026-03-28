@@ -29,6 +29,7 @@ class City(world_object.WorldObject):
     self.last_stop_time = 0
     self.walking = False
     self.was_walking = False
+    self.trees = 1.0
 
   def walk(self, dx, dy, delta):
     self.x += dx * delta
@@ -39,8 +40,11 @@ class City(world_object.WorldObject):
   def Update(self, delta):
     if self.walking:
       self.last_walk_time = self.time
+      self.trees -= delta * 0.05
     else:
       self.last_stop_time = self.time
+      self.trees -= delta * 0.01
+    self.trees = max(self.trees, 0)
     self.was_walking = self.walking
     self.walking = False
     self.time += delta

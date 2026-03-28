@@ -43,6 +43,8 @@ class Trees(world_resource.WorldResource):
       self.world.RemoveResource(self)
     else:
       self.eaten = min(1.0, self.eaten + amount)
+      self.world.city.trees += amount
+      self.world.city.trees = min(1, self.world.city.trees)
 
   def Render(self, shadow=False):
     num = int(self.tree_count * (1.0 - self.eaten))

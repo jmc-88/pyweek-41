@@ -88,3 +88,6 @@ class Shaders:
 
     self.mesh_instanced = self._PrepShader('mesh_instanced.vert', 'mesh.frag')
     self.mesh_instanced_shadow = self._PrepShader('mesh_instanced.vert', 'shadow_map.frag')
+
+    self.hud_colored = self._PrepShader('hud.vert', 'flat_color.frag')
+    self.hud_textured = self._PrepShader('hud.vert', 'textured.frag')

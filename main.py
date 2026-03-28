@@ -8,6 +8,8 @@ import time
 import animated_mesh
 import city as city_module
 import config
+import grain
+import hud as hud_module
 import matrix
 import shaders as shaders_module
 import shadows
@@ -113,9 +115,12 @@ def main():
   base_terrain.SetOffset(0)
 
   shadow_map = shadows.ShadowMap()
-  GL.glActiveTexture(GL.GL_TEXTURE0)
+  # Arbitrarily keep the shadow map always in texture slot 5.
+  GL.glActiveTexture(GL.GL_TEXTURE0 + 5)
   GL.glBindTexture(GL.GL_TEXTURE_2D, shadow_map.tex)
-  shaders.SetUniformInAllShaders('shadow_map', 0)
+  shaders.SetUniformInAllShaders('shadow_map', 5)
+
+  hud = hud_module.HUD(shaders, world)
 
   st = time.time()
   prev_frame = time.time()
@@ -167,6 +172,9 @@ def main():
     shaders.SetUniformInAllShaders('world_to_clip', mat)
 
     world.Render(shadow=False)
+
+    hud.Update()
+    hud.Render()
 
     pygame.display.flip()
 
