@@ -1,5 +1,5 @@
 import ctypes
-import numpy
+import numpy as np
 import OpenGL
 from OpenGL import GL
 from OpenGL.arrays import vbo
@@ -8,7 +8,7 @@ from OpenGL.arrays import vbo
 class AnimatedMesh:
   def __init__(self, path, shaders):
     self.shaders = shaders
-    with numpy.load(path, allow_pickle=False) as data:
+    with np.load(path, allow_pickle=False) as data:
       self.num_frames = data['num_frames'].item()
       self.num_verts = data['num_verts'].item()
       indices = data['index_buffer']

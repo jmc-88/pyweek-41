@@ -1,6 +1,6 @@
 import ctypes
 import math
-import numpy
+import numpy as np
 import OpenGL
 from OpenGL import GL
 import pygame
@@ -26,19 +26,19 @@ PrimitiveRestartIndex = 2000000000  # Arbitrary number higher than any vertex in
 
 # Inspired by https://youtu.be/BFld4EBO2RE
 def S(l):
-  return 3 * numpy.power(l, 2) - 2 * numpy.power(l, 3)
+  return 3 * np.power(l, 2) - 2 * np.power(l, 3)
 
 def S_diff(l):
-  return 6 * l - 6 * numpy.power(l, 2)
+  return 6 * l - 6 * np.power(l, 2)
 
 def f(v):
-  ij, vo = numpy.divmod(v, 1)
+  ij, vo = np.divmod(v, 1)
 
   def pseudo(v):
-    v = v.astype(numpy.float64)
-    uv = numpy.divmod(v / numpy.e, 1)[1] * 123
+    v = v.astype(np.float64)
+    uv = np.divmod(v / np.e, 1)[1] * 123
     a = uv[..., 0] * uv[..., 1] * (uv[..., 0] + uv[..., 1])
-    r = numpy.divmod(a, 1)[1]
+    r = np.divmod(a, 1)[1]
     return r * 2 - 1
 
   aij = pseudo(ij)
@@ -53,13 +53,13 @@ def f(v):
   return z
 
 def f_dx(v):
-  ij, vo = numpy.divmod(v, 1)
+  ij, vo = np.divmod(v, 1)
 
   def pseudo(v):
-    v = v.astype(numpy.float64)
-    uv = numpy.divmod(v / numpy.e, 1)[1] * 123
+    v = v.astype(np.float64)
+    uv = np.divmod(v / np.e, 1)[1] * 123
     a = uv[..., 0] * uv[..., 1] * (uv[..., 0] + uv[..., 1])
-    r = numpy.divmod(a, 1)[1]
+    r = np.divmod(a, 1)[1]
     return r * 2 - 1
 
   aij = pseudo(ij)
@@ -72,13 +72,13 @@ def f_dx(v):
   return z
 
 def f_dy(v):
-  ij, vo = numpy.divmod(v, 1)
+  ij, vo = np.divmod(v, 1)
 
   def pseudo(v):
-    v = v.astype(numpy.float64)
-    uv = numpy.divmod(v / numpy.e, 1)[1] * 123
+    v = v.astype(np.float64)
+    uv = np.divmod(v / np.e, 1)[1] * 123
     a = uv[..., 0] * uv[..., 1] * (uv[..., 0] + uv[..., 1])
-    r = numpy.divmod(a, 1)[1]
+    r = np.divmod(a, 1)[1]
     return r * 2 - 1
 
   aij = pseudo(ij)
@@ -95,31 +95,31 @@ class TerrainChunk:
   def __init__(self, x_offset):
     self.x_offset = x_offset
 
-    x, y = numpy.meshgrid(
-      numpy.linspace(0, config.TerrainWidth, config.TerrainResolutionX,
-                     dtype=numpy.float32),
-      numpy.linspace(-config.TerrainHeight / 2, config.TerrainHeight / 2,
-                     config.TerrainResolutionY, dtype=numpy.float32))
+    x, y = np.meshgrid(
+      np.linspace(0, config.TerrainWidth, config.TerrainResolutionX,
+                     dtype=np.float32),
+      np.linspace(-config.TerrainHeight / 2, config.TerrainHeight / 2,
+                     config.TerrainResolutionY, dtype=np.float32))
     x = x + x_offset  # TODO: change this so each chunk uses "local" coordinates and we line things up elsewhere so we don't get creeping accuracy issues as we move far from the origin (i.e. re-center coordinates periodically)
 
     # TODO: generate some actually interesting terrain here, and pull in some data across chunks to make it nice and contiuous
 
     # Basic sine wave terrain:
-    #self.z = numpy.sin(x * 8) * 0.05 + numpy.sin(y * 5) * 0.05 - 0.0
-    #normals = numpy.stack([-numpy.cos(x * 8) * 8 * 0.05, -numpy.cos(y * 5) * 5 * 0.05, numpy.ones_like(x)], -1)
+    #self.z = np.sin(x * 8) * 0.05 + np.sin(y * 5) * 0.05 - 0.0
+    #normals = np.stack([-np.cos(x * 8) * 8 * 0.05, -np.cos(y * 5) * 5 * 0.05, np.ones_like(x)], -1)
 
-    p = numpy.stack([x, y], -1)
-    M = numpy.array([[4/5, -3/5], [3/5, 4/5]])
+    p = np.stack([x, y], -1)
+    M = np.array([[4/5, -3/5], [3/5, 4/5]])
     self.z = f(p) * 0.2
     # More high-freq variation, but need some work to compute the normals for this one:
-    #M = numpy.array([[4/5, -3/5], [3/5, 4/5]])
+    #M = np.array([[4/5, -3/5], [3/5, 4/5]])
     #self.z = f(p) * 0.2 + f(2 * p @ M) * 0.1
-    self.z = self.z.astype(numpy.float32)
-    normals = numpy.stack([-f_dx(p) * 0.2, -f_dy(p) * 0.2, numpy.ones_like(x)], -1)
-    normals = normals.astype(numpy.float32)
+    self.z = self.z.astype(np.float32)
+    normals = np.stack([-f_dx(p) * 0.2, -f_dy(p) * 0.2, np.ones_like(x)], -1)
+    normals = normals.astype(np.float32)
 
-    normals = normals / numpy.linalg.norm(normals, axis=2, keepdims=True)
-    data = numpy.concat([self.z.reshape(-1, 1), normals.reshape(-1, 3)], -1)
+    normals = normals / np.linalg.norm(normals, axis=2, keepdims=True)
+    data = np.concat([self.z.reshape(-1, 1), normals.reshape(-1, 3)], -1)
 
     vbo = GL.glGenBuffers(1)
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, vbo)
@@ -143,12 +143,12 @@ class BaseTerrain(world_object.WorldObject):
     for x in range(config.TerrainResolutionX - 1):
       row_buffer.append(x + 1)
       row_buffer.append(config.TerrainResolutionX + x + 1)
-    row_buffer = numpy.array(row_buffer, dtype=numpy.int32)
+    row_buffer = np.array(row_buffer, dtype=np.int32)
     all_parts = [row_buffer]
     for i in range(1, config.TerrainResolutionY - 1):
-      all_parts.append(numpy.array([PrimitiveRestartIndex], dtype=numpy.int32))
+      all_parts.append(np.array([PrimitiveRestartIndex], dtype=np.int32))
       all_parts.append(row_buffer + (i * config.TerrainResolutionX))
-    self.index_buffer = numpy.concat(all_parts)
+    self.index_buffer = np.concat(all_parts)
 
     self.index_vbo = GL.glGenBuffers(1)
     GL.glBindBuffer(GL.GL_ELEMENT_ARRAY_BUFFER, self.index_vbo)
@@ -215,7 +215,7 @@ class World:
   def __init__(self, city, terrain):
     self.city = city
     self.terrain = terrain
-    self.resources: dict[numpy.array, world_resource.WorldResource] = dict()
+    self.resources: dict[np.array, world_resource.WorldResource] = dict()
 
   def AddResource(self, res: world_resource.WorldResource):
     center = (res.center[0], res.center[1])
@@ -243,7 +243,7 @@ class World:
     nearest = None
     nearest_dist = math.inf
     for _, res in self.resources.items():
-      dist = numpy.linalg.norm(pos - res.center)
+      dist = np.linalg.norm(pos - res.center)
       if dist > max_distance:
         continue
       if dist < nearest_dist:
@@ -298,7 +298,7 @@ def main():
     matrix.Rotate(-90, 0, 1, 0) @ matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(0.2, 0.2, 0.2))
 
   world = World(city, base_terrain)
-  world.AddResource(trees.Trees(tree_mesh, 15, numpy.array([4.0, 0.0]), 1.0))
+  world.AddResource(trees.Trees(tree_mesh, 15, np.array([4.0, 0.0]), 1.0))
 
   shadow_map = shadows.ShadowMap()
   GL.glActiveTexture(GL.GL_TEXTURE0)
@@ -321,7 +321,7 @@ def main():
     sun_angle = max(sun_angle_min, sun_angle)
     sun_angle = min(sun_angle_max, sun_angle)
     sun_angle_rad = sun_angle / 180 * math.pi
-    sun_direction = numpy.array([math.cos(sun_angle_rad), 0, math.sin(sun_angle_rad)])
+    sun_direction = np.array([math.cos(sun_angle_rad), 0, math.sin(sun_angle_rad)])
     shaders.SetUniformInAllShaders('sun_direction', sun_direction)
     base_terrain.SetOffset(city.x)
     world.Update(delta)
@@ -381,7 +381,7 @@ def main():
 
     if pressed[pygame.K_SPACE]:
       nearest_resource = world.NearestResource(
-        numpy.array([city.x, city.y]), 0.8)
+        np.array([city.x, city.y]), 0.8)
       if nearest_resource:
         nearest_resource.Harvest(delta * 0.3)
         # TODO: animation!
@@ -394,7 +394,7 @@ def main():
           last_eat_sound = now
           eat_fail_sound.play()
 
-    moving = numpy.array([0, 0])
+    moving = np.array([0, 0])
     if pressed[pygame.K_LEFT]:
       moving[0] = -1
     if pressed[pygame.K_RIGHT]:
@@ -403,10 +403,10 @@ def main():
       moving[1] = +1
     if pressed[pygame.K_DOWN]:
       moving[1] = -1
-    if numpy.any(moving):
+    if np.any(moving):
       city.walk(moving[0] * 2, moving[1] * 2, delta)
 
-      target_angle = numpy.arctan2(moving[1], moving[0]) / math.pi * 180
+      target_angle = np.arctan2(moving[1], moving[0]) / math.pi * 180
       if abs(city.angle - target_angle) > abs(city.angle + 360 - target_angle):
         city.angle += 360
       elif abs(city.angle - target_angle) > abs(city.angle - 360 - target_angle):

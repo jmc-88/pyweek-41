@@ -1,6 +1,6 @@
 import click
 import re
-import numpy
+import numpy as np
 import os
 import sys
 
@@ -18,7 +18,7 @@ def ReadMaterials(path):
         material_name = rest
       elif cmd == 'Kd':
         c = [float(x) * 255 for x in rest.split(' ')]
-        c = numpy.array(c + [255], dtype=numpy.uint8)
+        c = np.array(c + [255], dtype=np.uint8)
         colors[material_name] = c
       else:
         pass  # Just ignore everything else for now.
@@ -39,7 +39,7 @@ class ObjFile:
     skipped_vn = 0
 
     colors = None
-    current_color = numpy.array([255, 255, 255, 255], dtype=numpy.uint8)
+    current_color = np.array([255, 255, 255, 255], dtype=np.uint8)
 
     with open(path, 'rt') as f:
       for line in f:
@@ -64,21 +64,21 @@ class ObjFile:
         if cmd == 'v':
           if match:
             coords = [float(x) for x in rest.split(' ')]
-            verts.append(numpy.array(coords, dtype=numpy.float32))
+            verts.append(np.array(coords, dtype=np.float32))
           else:
             skipped_v += 1
           continue
         if cmd == 'vn':
           if match:
             coords = [float(x) for x in rest.split(' ')]
-            vert_normals.append(numpy.array(coords, dtype=numpy.float32))
+            vert_normals.append(np.array(coords, dtype=np.float32))
           else:
             skipped_vn += 1
           continue
         if cmd == 'vt':
           if match:
             coords = [float(x) for x in rest.split(' ')]
-            vert_texcoords.append(numpy.array(coords, dtype=numpy.float32))
+            vert_texcoords.append(np.array(coords, dtype=np.float32))
           else:
             skipped_vt += 1
           continue
@@ -90,18 +90,18 @@ class ObjFile:
             print('Non-triangle face, not implemented.')
             sys.exit(1)
           skipped = skipped_v, skipped_vt, skipped_vn
-          faces.append(numpy.array(
+          faces.append(np.array(
             [[int(x) - 1 - s for x, s in zip(corners[j].split('/'), skipped)] for j in range(3)]))
           face_colors.append(current_color)
           continue
         print('Confused by line %r.' % line)
         sys.exit(1)
 
-    self.verts = numpy.stack(verts)
-    self.vert_normals = numpy.stack(vert_normals)
-    self.vert_texcoords = numpy.stack(vert_texcoords)
-    self.faces = numpy.stack(faces)
-    self.face_colors = numpy.stack(face_colors)
+    self.verts = np.stack(verts)
+    self.vert_normals = np.stack(vert_normals)
+    self.vert_texcoords = np.stack(vert_texcoords)
+    self.faces = np.stack(faces)
+    self.face_colors = np.stack(face_colors)
 
 @click.command()
 @click.argument('files', nargs=-1)
@@ -128,11 +128,11 @@ def main(files, filter, output_name=None):
   ref_face_colors = objs[0].face_colors
   for fidx, o in enumerate(objs[1:]):
     fwn = o.faces[:, :, :2]
-    if not numpy.array_equal(ref_faces_without_normals, fwn):
+    if not np.array_equal(ref_faces_without_normals, fwn):
       print('Mismatch of faces-without-normals in frame %i.' % (fidx + 1))
-    if not numpy.array_equal(ref_texcoords, o.vert_texcoords):
+    if not np.array_equal(ref_texcoords, o.vert_texcoords):
       print('Mismatch of texcoords in frame %i.' % (fidx + 1))
-    if not numpy.array_equal(ref_face_colors, o.face_colors):
+    if not np.array_equal(ref_face_colors, o.face_colors):
       print('Mismatch of face colors in frame %i.' % (fidx + 1))
 
 
@@ -152,26 +152,26 @@ def main(files, filter, output_name=None):
       combined_face.append(combined_vert_map[key])
     fc = ref_face_colors[fidx]
     for cv_idx, cv in enumerate(combined_face):
-      if cv in vert_colors and numpy.array_equal(vert_colors[cv], fc):
-        combined_face = numpy.roll(combined_face, 2 - cv_idx)
+      if cv in vert_colors and np.array_equal(vert_colors[cv], fc):
+        combined_face = np.roll(combined_face, 2 - cv_idx)
         assert combined_face[2] == cv
         break
     else:
       for cv_idx, cv in enumerate(combined_face):
         if cv not in vert_colors:
           vert_colors[cv] = fc
-          combined_face = numpy.roll(combined_face, 2 - cv_idx)
+          combined_face = np.roll(combined_face, 2 - cv_idx)
           break
       # else:
         # print('Face %i, no free vertex to carry face color.' % fidx)
         # TODO: consider checking colors earlier and creating a new combined vertex of needed to have a vertex that can hold this color
-    faces.append(numpy.array(combined_face))
+    faces.append(np.array(combined_face))
   print('%i combined vertices' % len(combined_verts))
   print('%i carry a color' % len(vert_colors))
 
-  index_buffer = numpy.stack(faces).flatten().astype(numpy.int32)
+  index_buffer = np.stack(faces).flatten().astype(np.int32)
 
-  color_buffer = numpy.zeros((len(combined_verts), 4), dtype=numpy.uint8)
+  color_buffer = np.zeros((len(combined_verts), 4), dtype=np.uint8)
   for idx, color in vert_colors.items():
     color_buffer[idx] = color
 
@@ -179,7 +179,7 @@ def main(files, filter, output_name=None):
   # - 2 floats for tex coordinates (constant for all frames)
   # - 3 floats for position, per frame
   # - 3 floats for normal, per frame
-  vert_buffer = numpy.zeros(len(combined_verts) * (2 + 6 * len(objs)), dtype=numpy.float32)
+  vert_buffer = np.zeros(len(combined_verts) * (2 + 6 * len(objs)), dtype=np.float32)
   tc_size = len(combined_verts) * 2
   frame_size = len(combined_verts) * 6
   for cv_idx, (v_idx, vt_idx, vn_indices) in enumerate(combined_verts):
@@ -193,11 +193,11 @@ def main(files, filter, output_name=None):
 
   print('Saving to %r.' % output_name)
   with open(output_name, 'wb') as f:
-    numpy.savez_compressed(
+    np.savez_compressed(
       f, allow_pickle=False,
       **{
-        'num_frames': numpy.array([len(objs)], dtype=numpy.int32),
-        'num_verts': numpy.array([len(combined_verts)], dtype=numpy.int32),
+        'num_frames': np.array([len(objs)], dtype=np.int32),
+        'num_verts': np.array([len(combined_verts)], dtype=np.int32),
         'index_buffer': index_buffer,
         'vert_buffer': vert_buffer,
         'color_buffer': color_buffer,

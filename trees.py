@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import OpenGL
 from OpenGL import GL
 
@@ -13,10 +13,10 @@ class Trees(world_resource.WorldResource):
     self.tree_mesh = tree_mesh
     self.tree_count = tree_count
     self.eaten: float = 0.0
-    angle = numpy.random.random_sample(tree_count) * numpy.pi * 2
-    r = numpy.sqrt(numpy.random.random_sample(tree_count)) * radius
-    x = r * numpy.cos(angle)
-    y = r * numpy.sin(angle)
+    angle = np.random.random_sample(tree_count) * np.pi * 2
+    r = np.sqrt(np.random.random_sample(tree_count)) * radius
+    x = r * np.cos(angle)
+    y = r * np.sin(angle)
 
     mats = []
     base_transform = matrix.Rotate(90, 1, 0, 0) @ matrix.Scale(1 / 20, 1 / 20, 1 / 20)
@@ -25,7 +25,7 @@ class Trees(world_resource.WorldResource):
       m = matrix.Translate(center[0] + x[idx], center[1] + y[idx], 0)
       m = base_transform @ m
       mats.append(m)
-    mats = numpy.stack(mats)
+    mats = np.stack(mats)
 
     self.vbo = GL.glGenBuffers(1)
     GL.glBindBuffer(GL.GL_ARRAY_BUFFER, self.vbo)
