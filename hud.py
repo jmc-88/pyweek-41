@@ -70,7 +70,7 @@ class HUD:
     self.textured_quads['space_to_gather'] = _TexturedQuad(-0.3, -0.95, 0.5, 0.2, self.space_to_gather)
 
     self.textured_quads['tree_meter_header'] = _TexturedQuad(-0.98, -0.95, 0.2, 0.1, self.tree_texture)
-    self.colored_quads['tree_meter'] = _ColoredQuad(-0.93, -0.75, 0.1, 0.5, np.array([0.2, 0.9, 0.2, 0.9]), np.array([1.0, 0.0, 0.0, 0.9]), hasReachedCriticality=lambda value: value <= 0.4)
+    self.colored_quads['tree_meter'] = _ColoredQuad(-0.93, -0.75, 0.1, 0.5, np.array([0.2, 0.3, 0.2, 0.98]), np.array([1.0, 0.0, 0.0, 0.98]), hasReachedCriticality=lambda value: value <= 0.4)
 
     self.textured_quads['grain_meter_header'] = _TexturedQuad(-0.80, -0.95, 0.2, 0.1, self.grain_texture)
     self.colored_quads['grain_meter'] = _ColoredQuad(-0.75, -0.75, 0.1, 0.5, np.array([0.8, 0.8, 0.2, 0.9]), np.array([1.0, 0.0, 0.0, 0.9]), hasReachedCriticality=lambda value: value <= 0.4)
