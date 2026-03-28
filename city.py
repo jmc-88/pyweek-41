@@ -37,9 +37,12 @@ class City(world_object.WorldObject):
     self.trees = 1.0
     self.grain = 1.0
     self.madness_level = 0.0
+    self.gather_speed = 1.0
 
   def AddUpgrade(self, name):
     self.upgrades.add(name)
+    if name == 'cannons':
+      self.gather_speed = 2.5
 
   def walk(self, moving, delta):
     if 'armor' in self.upgrades:

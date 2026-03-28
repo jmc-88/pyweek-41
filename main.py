@@ -266,7 +266,7 @@ def main():
       nearest_resource = world.NearestResource(
         np.array([city.x, city.y]), 0.8)
       if nearest_resource:
-        nearest_resource.Harvest(delta * 0.3)
+        nearest_resource.Harvest(delta * 0.3 * world.city.gather_speed)
         # TODO: animation!
         # TODO: sound effect! in a less hacky way
         if now - last_eat_sound > 1.9:

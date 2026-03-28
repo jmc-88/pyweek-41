@@ -45,7 +45,7 @@ class HUD:
     self.madness_texture = texture.Texture('madness.png')
     self.space_to_gather = texture.Texture('space_to_gather.png')
 
-    self.upgrades = ['cannons', 'armor', 'cranes', 'pipe', 'turret', 'radar']
+    self.upgrades = ['cannons', 'armor', 'turret', 'radar']
     self.upgrade_textures = {name: texture.Texture('upgrades/%s.png' % name)
                              for name in self.upgrades}
     self.buy_upgrade_texture = texture.Texture('upgrades/buy.png')
@@ -89,7 +89,7 @@ class HUD:
 
     if self.upgrade_list_open:
       self.textured_quads['buy_upgrade'] = _TexturedQuad(0.5, -0.95, 0.45, 0.2, self.buy_cancel_texture)
-      available_upgrades = self.world.city.all_upgrades - self.world.city.upgrades
+      available_upgrades = set(self.upgrades) - self.world.city.upgrades
       available_upgrades = sorted(available_upgrades)
       y = -0.95 + 0.25
       for u in available_upgrades:
@@ -109,6 +109,9 @@ class HUD:
           upgrade_name = name[len('upgrade_'):]
           self.play_sound('cute', count=3)
           self.world.city.AddUpgrade(upgrade_name)
+          if upgrade_name == 'cannons':
+            self.world.city.AddUpgrade('cranes')
+            self.world.city.AddUpgrade('pipe')
           break
       self.upgrade_list_open = False
       self._UpdateUpgradeButtons()
