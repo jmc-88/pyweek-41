@@ -33,6 +33,7 @@ class City(world_object.WorldObject):
     self.was_walking = False
     self.trees = 1.0
     self.grain = 1.0
+    self.madness_level = 0.0
 
   def walk(self, moving, delta):
     target_angle = np.arctan2(moving[1], moving[0]) / math.pi * 180
@@ -73,6 +74,9 @@ class City(world_object.WorldObject):
     self.walking = False
     self.time += delta
     self.transform = self.base_transform @ matrix.Rotate(self.angle, 0, 0, 1) @ matrix.Translate(self.x, self.y, 1)
+
+    # TODO: increase madness level when we are in the dark
+    # Slowly decrease madness level while staying in the light?
 
   def Render(self, shadow):
     self.mesh_shell.Render(frame=0, mesh_to_world=self.transform, shadow=shadow)
