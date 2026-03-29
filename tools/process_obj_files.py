@@ -2,13 +2,14 @@ import click
 import re
 import numpy as np
 import os
+import pathlib
 import sys
 
 
-def ReadMaterials(path):
+def ReadMaterials(path: pathlib.Path):
   material_name = None
   colors = {}
-  with open(path, 'rt') as f:
+  with path.open('rt') as f:
     for line in f:
       line = line.strip()
       if not line or line[0] == '#':
@@ -26,7 +27,7 @@ def ReadMaterials(path):
 
 
 class ObjFile:
-  def __init__(self, path, filter):
+  def __init__(self, path: pathlib.Path, filter):
     # Raw from the .obj file.
     current_name = ''
     verts = []
@@ -41,7 +42,7 @@ class ObjFile:
     colors = None
     current_color = np.array([255, 255, 255, 255], dtype=np.uint8)
 
-    with open(path, 'rt') as f:
+    with path.open('rt') as f:
       for line in f:
         line = line.strip()
         if line[0] == '#':
@@ -56,7 +57,8 @@ class ObjFile:
           continue
         match = re.match(filter, current_name)
         if cmd == 'mtllib':
-          colors = ReadMaterials(rest)
+          materials = path.parent / rest
+          colors = ReadMaterials(materials)
           continue
         if cmd == 'usemtl':
           current_color = colors[rest]
@@ -117,7 +119,7 @@ def main(files, filter, output_name=None):
   objs = []
 
   for index, f in enumerate(files):
-    o = ObjFile(f, filter)
+    o = ObjFile(pathlib.Path(f), filter)
     objs.append(o)
     print('Frame %3i: %4i verts, %4i faces  (%4i normals, %4i texcoords)'
           % (index, o.verts.shape[0], o.faces.shape[0],
