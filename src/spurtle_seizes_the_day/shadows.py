@@ -1,6 +1,6 @@
 from OpenGL import GL
 
-import config
+from . import config
 
 
 class ShadowMap:

@@ -1,4 +1,4 @@
-import world_object
+from . import world_object
 
 
 class WorldResource(world_object.WorldObject):

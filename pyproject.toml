@@ -1,5 +1,5 @@
 [project]
-name = "pyweek-41"
+name = "spurtle-seizes-the-day"
 version = "0.1.0"
 description = "PyWeek 41 entry from the Large Sandwich Models team."
 readme = "README.md"
@@ -10,8 +10,26 @@ dependencies = [
     "pyopengl>=3.1.10",
 ]
 
+# https://docs.astral.sh/uv/concepts/projects/build/#preventing-publish-to-pypi
+classifiers = ["Private :: Do Not Upload"]
+
+[project.scripts]
+spurtle = "spurtle_seizes_the_day:main"
+
+[project.urls]
+Homepage = "https://pyweek.org/e/spurtle/"
+Documentation = "https://pyweek.org/e/spurtle/"
+Repository = "https://github.com/jmc-88/pyweek-41"
+
 [dependency-groups]
 dev = [
     "click>=8.3.1",
     "nuitka[all]>=4.0.6",
 ]
+
+[build-system]
+requires = ["uv_build>=0.11.2,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+source-include = ["data/**", "tools/**"]

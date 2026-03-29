@@ -1,12 +1,11 @@
 import ctypes
-import math
 import numpy as np
 from OpenGL import GL
 
-import config
-import trees
-import grain
-import world_object
+from . import config
+from . import trees
+from . import grain
+from . import world_object
 
 
 # Inspired by https://youtu.be/BFld4EBO2RE

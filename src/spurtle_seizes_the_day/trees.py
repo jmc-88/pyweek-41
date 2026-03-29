@@ -1,8 +1,8 @@
 import numpy as np
 from OpenGL import GL
 
-import matrix
-import world_resource
+from . import matrix
+from . import world_resource
 
 
 class Trees(world_resource.WorldResource):

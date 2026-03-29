@@ -7,16 +7,15 @@ import sys
 import threading
 import time
 
-import animated_mesh
-import city as city_module
-import config
-import grain
-import hud as hud_module
-import matrix
-import shaders as shaders_module
-import shadows
-import terrain
-import world_resource
+from . import animated_mesh
+from . import city as city_module
+from . import config
+from . import hud as hud_module
+from . import matrix
+from . import shaders as shaders_module
+from . import shadows
+from . import terrain
+from . import world_resource
 
 
 ScreenWidth = 1440
@@ -106,12 +105,12 @@ def main():
 
   shaders = shaders_module.Shaders()
 
-  tree_mesh = animated_mesh.AnimatedMesh('objs/Tree3.obj.vbo', shaders)
-  grain_mesh = animated_mesh.AnimatedMesh('objs/grain.vbo', shaders)
+  tree_mesh = animated_mesh.AnimatedMesh('data/objs/Tree3.obj.vbo', shaders)
+  grain_mesh = animated_mesh.AnimatedMesh('data/objs/grain.vbo', shaders)
 
   pygame.mixer.init()
   sounds = {
-    ident: pygame.mixer.Sound('sounds/' + filename)
+    ident: pygame.mixer.Sound('data/sounds/' + filename)
     for ident, filename in {
       'eat_fail': 'um1.flac',
       'talk_intro1': 'talk-intro1.wav',
@@ -371,13 +370,3 @@ def main():
     t.join()
   dprint("Threads join'd")
   pygame.quit()
-
-
-
-if __name__ == '__main__':
-  try:
-    main()
-  except Exception as e:
-    import traceback
-    traceback.print_exception(sys.exception(), colorize=True)
-    sys.exit(1)

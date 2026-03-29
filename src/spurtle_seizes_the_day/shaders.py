@@ -2,7 +2,7 @@ from OpenGL import GL
 from OpenGL.GL import shaders
 import re
 
-import config
+from . import config
 
 
 class _ProgramHolder:
@@ -70,24 +70,24 @@ class Shaders:
   def __init__(self):
     self.all_programs = []
 
-    with open('light.frag', 'rt') as f:
+    with open('data/light.frag', 'rt') as f:
       self.common_light_src = f.read()
 
     self.defines = self._MakeDefines()
-    self.terrain = self._PrepShader('terrain.vert', 'terrain.frag')
-    self.terrain_shadow = self._PrepShader('terrain.vert', 'shadow_map.frag')
+    self.terrain = self._PrepShader('data/terrain.vert', 'data/terrain.frag')
+    self.terrain_shadow = self._PrepShader('data/terrain.vert', 'data/shadow_map.frag')
 
-    self.animated_mesh = self._PrepShader('animated_mesh.vert', 'mesh.frag')
-    self.animated_mesh_shadow = self._PrepShader('animated_mesh.vert', 'shadow_map.frag')
+    self.animated_mesh = self._PrepShader('data/animated_mesh.vert', 'data/mesh.frag')
+    self.animated_mesh_shadow = self._PrepShader('data/animated_mesh.vert', 'data/shadow_map.frag')
 
-    self.leg_mesh = self._PrepShader('legs.vert', 'mesh.frag')
-    self.leg_mesh_shadow = self._PrepShader('legs.vert', 'shadow_map.frag')
+    self.leg_mesh = self._PrepShader('data/legs.vert', 'data/mesh.frag')
+    self.leg_mesh_shadow = self._PrepShader('data/legs.vert', 'data/shadow_map.frag')
 
-    self.mesh = self._PrepShader('mesh.vert', 'mesh.frag')
-    self.mesh_shadow = self._PrepShader('mesh.vert', 'shadow_map.frag')
+    self.mesh = self._PrepShader('data/mesh.vert', 'data/mesh.frag')
+    self.mesh_shadow = self._PrepShader('data/mesh.vert', 'data/shadow_map.frag')
 
-    self.mesh_instanced = self._PrepShader('mesh_instanced.vert', 'mesh.frag')
-    self.mesh_instanced_shadow = self._PrepShader('mesh_instanced.vert', 'shadow_map.frag')
+    self.mesh_instanced = self._PrepShader('data/mesh_instanced.vert', 'data/mesh.frag')
+    self.mesh_instanced_shadow = self._PrepShader('data/mesh_instanced.vert', 'data/shadow_map.frag')
 
-    self.hud_colored = self._PrepShader('hud.vert', 'flat_color.frag')
-    self.hud_textured = self._PrepShader('hud.vert', 'textured.frag')
+    self.hud_colored = self._PrepShader('data/hud.vert', 'data/flat_color.frag')
+    self.hud_textured = self._PrepShader('data/hud.vert', 'data/textured.frag')

@@ -1,12 +1,12 @@
 import math
-import matrix
 import numpy as np
 from OpenGL import GL
 import time
 
-import animated_mesh
-import config
-import world_object
+from . import animated_mesh
+from . import config
+from . import matrix
+from . import world_object
 
 LOW_MADNESS=0.60
 MID_MADNESS=0.70
@@ -21,14 +21,14 @@ class City(world_object.WorldObject):
     self.play_sound = play_sound
     self.last_sound_played = time.monotonic()
     self.last_sound_madness = 0.0
-    self.mesh_shell = animated_mesh.AnimatedMesh('objs/shell.vbo', shaders)
-    self.mesh_head = animated_mesh.AnimatedMesh('objs/head.vbo', shaders)
-    self.mesh_legs = [animated_mesh.AnimatedMesh(f'objs/leg{i+1}.vbo', shaders) for i in range(4)]
+    self.mesh_shell = animated_mesh.AnimatedMesh('data/objs/shell.vbo', shaders)
+    self.mesh_head = animated_mesh.AnimatedMesh('data/objs/head.vbo', shaders)
+    self.mesh_legs = [animated_mesh.AnimatedMesh(f'data/objs/leg{i+1}.vbo', shaders) for i in range(4)]
     self.mesh_shell_upgrades = {
-      name: animated_mesh.AnimatedMesh(f'objs/{name}.vbo', shaders)
+      name: animated_mesh.AnimatedMesh(f'data/objs/{name}.vbo', shaders)
       for name in ['cannons', 'armor', 'cranes', 'pipe', 'turret']}
     self.mesh_head_upgrades = {
-      name: animated_mesh.AnimatedMesh(f'objs/{name}.vbo', shaders)
+      name: animated_mesh.AnimatedMesh(f'data/objs/{name}.vbo', shaders)
       for name in ['radar']}
     self.all_upgrades = set(self.mesh_shell_upgrades) | set(self.mesh_head_upgrades)
     self.upgrades = set()

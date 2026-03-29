@@ -1,9 +1,8 @@
 import numpy as np
 from OpenGL import GL
-import random
 import time
 
-import texture
+from . import texture
 
 
 class _TexturedQuad:
@@ -105,16 +104,16 @@ class HUD(EmptyHUD):
     self.world = world
     self.play_sound = play_sound
 
-    self.tree_texture = texture.Texture('trees.png')
-    self.grain_texture = texture.Texture('grain.png')
-    self.madness_texture = texture.Texture('madness.png')
-    self.space_to_gather = texture.Texture('space_to_gather.png')
+    self.tree_texture = texture.Texture('data/trees.png')
+    self.grain_texture = texture.Texture('data/grain.png')
+    self.madness_texture = texture.Texture('data/madness.png')
+    self.space_to_gather = texture.Texture('data/space_to_gather.png')
 
     self.upgrades = ['cannons', 'armor', 'turret', 'radar']
-    self.upgrade_textures = {name: texture.Texture('upgrades/%s.png' % name)
+    self.upgrade_textures = {name: texture.Texture('data/upgrades/%s.png' % name)
                              for name in self.upgrades}
-    self.buy_upgrade_texture = texture.Texture('upgrades/buy.png')
-    self.buy_cancel_texture = texture.Texture('upgrades/cancel.png')
+    self.buy_upgrade_texture = texture.Texture('data/upgrades/buy.png')
+    self.buy_cancel_texture = texture.Texture('data/upgrades/cancel.png')
     self.upgrade_list_open = False
     self.earned_upgrade = False
 
@@ -201,5 +200,5 @@ class HUD(EmptyHUD):
 class SplashScreenHUD(EmptyHUD):
   def __init__(self, shaders):
     super().__init__(shaders)
-    self.splash_screen = texture.Texture('artwork/Splashscreen.png')
+    self.splash_screen = texture.Texture('data/artwork/Splashscreen.png')
     self.textured_quads['splash'] = _TexturedQuad(-1, -1, 2, 2, self.splash_screen)
