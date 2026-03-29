@@ -361,9 +361,6 @@ def main():
       if done:
         break
 
-  if exit_now:
-    sys.exit(1)
-
   global QUITTING
   QUITTING=True
   dprint("Out of game loop")
