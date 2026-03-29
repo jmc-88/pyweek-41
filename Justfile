@@ -19,3 +19,11 @@ build_mac:
     --macos-create-app-bundle \
     --output-filename=Spurtle main.py
   mv main.app Spurtle.app
+
+build_linux:
+  uv run nuitka \
+    --mode=app \
+    --include-data-dir=data=data \
+    --output-filename=Spurtle.bin \
+    --remove-output \
+    main.py
