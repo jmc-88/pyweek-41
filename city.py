@@ -54,7 +54,7 @@ class City(world_object.WorldObject):
   def AddUpgrade(self, name):
     self.upgrades.add(name)
     if name == 'cannons':
-      self.gather_speed = 2.5
+      self.gather_speed = 1.5
 
   def walk(self, moving, delta):
     if 'armor' in self.upgrades:
@@ -94,10 +94,10 @@ class City(world_object.WorldObject):
     self.animation_time += delta * hunger_slowdown
 
   def Update(self, delta, height):
-    self.grain = max(self.grain - delta * 0.025, 0)
+    self.grain = max(self.grain - delta * 0.012, 0)
     if self.walking:
       self.last_walk_time = self.time
-      self.trees -= delta * 0.05
+      self.trees -= delta * 0.04
     else:
       self.last_stop_time = self.time
       self.trees -= delta * 0.01
@@ -109,9 +109,9 @@ class City(world_object.WorldObject):
 
     near_night = max(0, min(1, 1 - (self.x - self.world.night_progress) / 5))
     if near_night > 0:
-      self.madness_level += 0.1 * near_night * delta
+      self.madness_level += 0.008 * near_night * delta
     else:
-      self.madness_level -= 0.1 * delta
+      self.madness_level -= 0.01 * delta
     self.madness_level = float(max(0, min(1, self.madness_level)))
     # TODO: increase madness level when we are in the dark
     # Slowly decrease madness level while staying in the light?
