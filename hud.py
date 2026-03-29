@@ -186,10 +186,11 @@ class HUD(EmptyHUD):
       self.upgrade_list_open = False
       self._UpdateUpgradeButtons()
     else:
-      tq = self.textured_quads['buy_upgrade']
-      if x > tq.x and y > tq.y and x - tq.x < tq.w and y - tq.y < tq.h:
-        self.upgrade_list_open = True
-        self._UpdateUpgradeButtons()
+      if 'buy_upgrade' in self.textured_quads:
+        tq = self.textured_quads['buy_upgrade']
+        if x > tq.x and y > tq.y and x - tq.x < tq.w and y - tq.y < tq.h:
+          self.upgrade_list_open = True
+          self._UpdateUpgradeButtons()
 
   def Update(self):
     self.colored_quads['tree_meter'].level = self.world.city.trees * 0.5
