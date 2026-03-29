@@ -109,6 +109,7 @@ def main():
   grain_mesh = animated_mesh.AnimatedMesh('data/objs/grain.vbo', shaders)
 
   pygame.mixer.init()
+  pygame.mixer.music.load('data/sounds/music.flac')
   sounds = {
     ident: pygame.mixer.Sound('data/sounds/' + filename)
     for ident, filename in {
@@ -146,6 +147,15 @@ def main():
     if not QUITTING and not MUTE:
         sound_name = sound + ("" if not count else str(random.randrange(count)))
         sounds[sound_name].play()
+  def play_music(delay: float = 0.0001):
+    slept = 0
+    while(slept < delay):
+      if QUITTING:
+        return
+      time.sleep(0.1)
+      slept+=0.1
+    if not QUITTING and not MUTE:
+        pygame.mixer.music.play(-1)
   last_eat_sound = 0.0
 
   base_terrain = terrain.BaseTerrain(shaders)
@@ -217,6 +227,7 @@ def main():
   threads = [
     threading.Thread(target=play_sound, kwargs={'sound':'talk_intro1', 'delay':2.0}),
     threading.Thread(target=play_sound, kwargs={'sound':'talk_intro2', 'delay':23.0}),
+    threading.Thread(target=play_music, kwargs={'delay':30.0}),
     threading.Thread(target=Ticker, name="ticker", daemon=True),
   ]
   for t in threads:
