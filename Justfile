@@ -12,3 +12,10 @@ process_city:
   uv run python tools/process_obj_files.py data/city.obj --filter='Pipe' --output-name=data/objs/pipe.vbo
   uv run python tools/process_obj_files.py data/city.obj --filter='Radar' --output-name=data/objs/radar.vbo
   uv run python tools/process_obj_files.py data/city.obj --filter='Ruby' --output-name=data/objs/turret.vbo
+
+build_mac:
+  uv run nuitka --standalone \
+    --include-data-dir=data=data \
+    --macos-create-app-bundle \
+    --output-filename=Spurtle main.py
+  mv main.app Spurtle.app
