@@ -27,3 +27,12 @@ build_linux:
     --output-filename=Spurtle.bin \
     --remove-output \
     main.py
+
+build_win:
+  uv run nuitka \
+    --mode=app \
+    --include-data-dir=data=data \
+    --output-filename=Spurtle \
+    --remove-output \
+    --windows-disable-console \
+    main.py
