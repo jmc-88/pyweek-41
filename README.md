@@ -34,3 +34,13 @@ Your goal is to survive long enough to buy all available upgrades.
 - **Arrow keys**: move Spurtle around.
 - **Space bar**: harvest the nearest resource.
 - **Upgrades button**: click on it to acquire upgrades.
+
+## Running the game
+
+The easiest way to run the game is using [`uv`](https://docs.astral.sh/uv/):
+
+```shell
+$ git clone https://github.com/jmc-88/pyweek-41.git
+$ cd pyweek-41
+$ uv run spurtle
+```
