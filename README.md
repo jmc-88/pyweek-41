@@ -44,3 +44,11 @@ $ git clone https://github.com/jmc-88/pyweek-41.git
 $ cd pyweek-41
 $ uv run spurtle
 ```
+
+## LLM disclaimer 😱
+
+With a team name like ours, I'm sure someone will be wondering whether LLMs
+were used as aids in developing the game. The answer is: _very mildly_. We
+occasionally used LLMs to investigate some OpenGL errors and resolve minor bugs.
+Other than that, all game design, assets, code, sound, music was artisanally
+produced by humans.
